@@ -1,0 +1,50 @@
+sku,product_name,category,unit_cost_cad,supplier_id
+NB-0001,Nitrile Exam Gloves M,PPE,35.73,S08
+NB-0002,Nitrile Exam Gloves L,PPE,35.21,S07
+NB-0003,Vinyl Gloves S,PPE,42.0,S02
+NB-0004,Surgical Mask Level 2,PPE,6.62,S08
+NB-0005,N95 Respirator,PPE,43.8,S07
+NB-0006,Isolation Gown,PPE,10.33,S02
+NB-0007,Face Shield,PPE,19.19,S05
+NB-0008,Shoe Covers,PPE,31.46,S07
+NB-0009,Bouffant Cap,PPE,38.12,S07
+NB-0010,Latex Gloves M,PPE,12.2,S02
+NB-0011,Gauze Pad 4x4,Wound Care,48.16,S02
+NB-0012,Foam Dressing 10cm,Wound Care,31.44,S02
+NB-0013,Adhesive Bandage Strip,Wound Care,36.2,S06
+NB-0014,Hydrocolloid Dressing,Wound Care,52.08,S01
+NB-0015,Elastic Bandage 3in,Wound Care,41.74,S01
+NB-0016,Medical Tape 1in,Wound Care,15.02,S02
+NB-0017,Alginate Dressing,Wound Care,14.71,S06
+NB-0018,Transparent Film Dressing,Wound Care,22.28,S02
+NB-0019,Skin Closure Strips,Wound Care,57.94,S02
+NB-0020,Rapid Antigen Test Kit,Diagnostics,88.29,S03
+NB-0021,Glucose Test Strips,Diagnostics,59.05,S03
+NB-0022,Urine Test Strips,Diagnostics,92.95,S08
+NB-0023,Digital Thermometer,Diagnostics,80.78,S02
+NB-0024,Pulse Oximeter,Diagnostics,24.19,S08
+NB-0025,BP Cuff Adult,Diagnostics,73.08,S02
+NB-0026,Lancets 28G,Diagnostics,95.67,S02
+NB-0027,Specimen Collection Cup,Diagnostics,72.03,S02
+NB-0028,Suture Kit 3-0,Surgical,8.13,S04
+NB-0029,Scalpel Blade #10,Surgical,20.74,S04
+NB-0030,Sterile Drape,Surgical,137.82,S06
+NB-0031,Surgical Sponge,Surgical,125.32,S04
+NB-0032,Skin Stapler,Surgical,42.11,S06
+NB-0033,Hemostat Forceps,Surgical,148.89,S03
+NB-0034,Suction Catheter,Surgical,50.81,S06
+NB-0035,Syringe 10ml,Surgical,113.28,S04
+NB-0036,IV Start Kit,Surgical,27.23,S03
+NB-0037,Incontinence Brief L,Patient Care,14.48,S07
+NB-0038,Underpad 30x36,Patient Care,11.5,S07
+NB-0039,Bed Bath Wipes,Patient Care,28.69,S07
+NB-0040,Denture Cup,Patient Care,7.85,S04
+NB-0041,Emesis Bag,Patient Care,38.36,S04
+NB-0042,Patient ID Band,Patient Care,6.92,S01
+NB-0043,Mouth Swab,Patient Care,37.52,S07
+NB-0044,Hand Sanitizer 500ml,Patient Care,33.69,S07
+NB-0045,Sterilization Pouch,Sterilization,79.42,S03
+NB-0046,Indicator Tape,Sterilization,79.4,S03
+NB-0047,Biological Indicator,Sterilization,75.33,S03
+NB-0048,Enzymatic Cleaner 4L,Sterilization,34.83,S01
+NB-0049,Instrument Wrap,Sterilization,22.29,S01

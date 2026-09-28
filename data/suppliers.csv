@@ -1,0 +1,9 @@
+supplier_id,supplier_name,country,promised_lead_time_wks
+S01,Maple Leaf Medical Mfg,Canada,2
+S02,Great Lakes Health Products,USA,3
+S03,Rhein MedTech GmbH,Germany,6
+S04,Monterrey Surgical SA,Mexico,4
+S05,Penang Glove Industries,Malaysia,8
+S06,Chennai Healthcare Exports,India,9
+S07,Saigon Textile Medical,Vietnam,8
+S08,Shenzhen Diagnostics Co,China,10

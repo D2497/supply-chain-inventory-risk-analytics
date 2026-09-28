@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+# database is rebuilt from the CSVs every run
+data/supply_chain.db
+~$*.xlsx
+# Kaggle raw data (large; download it yourself, see data/raw/README.md)
+data/raw/*.csv
+data/raw/*.zip
