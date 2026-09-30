@@ -1,0 +1,27 @@
+sku,product_name,abc_class,current_supplier,current_country,nearshore_supplier,nearshore_country,annual_units,current_landed_unit_cad,nearshore_landed_unit_cad,current_lead_time_wks,nearshore_lead_time_wks,current_total_cad,nearshore_total_cad,annual_saving_cad,saving_pct,inventory_released_cad,recommendation
+NB-0033,Hemostat Forceps,A,Rhein MedTech GmbH,Germany,Monterrey Surgical SA,Mexico,14925,160.8,154.46,5.8,4.0,2482487.64,2364085.36,118402.28,0.0477,108063.9,Nearshore: lower total cost
+NB-0021,Glucose Test Strips,A,Rhein MedTech GmbH,Germany,Monterrey Surgical SA,Mexico,2890,63.77,61.26,5.8,4.0,190161.69,181197.24,8964.46,0.0471,7719.65,Nearshore: lower total cost
+NB-0045,Sterilization Pouch,B,Rhein MedTech GmbH,Germany,Monterrey Surgical SA,Mexico,842,85.77,82.39,5.8,4.0,74366.4,70917.2,3449.2,0.0464,2728.33,Nearshore: lower total cost
+NB-0020,Rapid Antigen Test Kit,B,Rhein MedTech GmbH,Germany,Monterrey Surgical SA,Mexico,559,95.35,91.59,5.8,4.0,54930.6,52360.39,2570.21,0.0468,2129.76,Nearshore: lower total cost
+NB-0036,IV Start Kit,B,Rhein MedTech GmbH,Germany,Monterrey Surgical SA,Mexico,1690,29.41,28.25,5.8,4.0,51228.47,48828.59,2399.88,0.0468,2001.12,Nearshore: lower total cost
+NB-0047,Biological Indicator,B,Rhein MedTech GmbH,Germany,Monterrey Surgical SA,Mexico,504,81.36,78.15,5.8,4.0,42331.13,40328.33,2002.8,0.0473,1756.59,Nearshore: lower total cost
+NB-0046,Indicator Tape,C,Rhein MedTech GmbH,Germany,Monterrey Surgical SA,Mexico,206,85.75,82.37,5.8,4.0,18216.53,17372.77,843.76,0.0463,662.56,Nearshore: lower total cost
+NB-0032,Skin Stapler,C,Chennai Healthcare Exports,India,Monterrey Surgical SA,Mexico,641,50.11,52.42,9.4,4.0,33706.65,34333.05,-626.4,-0.0186,3890.26,Nearshore candidate: small premium for resilience
+NB-0013,Adhesive Bandage Strip,B,Chennai Healthcare Exports,India,Monterrey Surgical SA,Mexico,1091,43.08,45.07,9.4,4.0,49304.41,50220.61,-916.2,-0.0186,5690.68,Nearshore candidate: small premium for resilience
+NB-0043,Mouth Swab,C,Saigon Textile Medical,Vietnam,Monterrey Surgical SA,Mexico,351,42.21,45.79,8.3,4.0,15546.99,16489.3,-942.31,-0.0606,1432.96,Keep offshore
+NB-0017,Alginate Dressing,B,Chennai Healthcare Exports,India,Monterrey Surgical SA,Mexico,3034,17.5,18.31,9.4,4.0,55881.98,56888.7,-1006.72,-0.018,6561.97,Nearshore candidate: small premium for resilience
+NB-0004,Surgical Mask Level 2,B,Shenzhen Diagnostics Co,China,Monterrey Surgical SA,Mexico,6864,7.81,8.24,10.8,4.0,56885.96,57911.6,-1025.63,-0.018,8742.73,Nearshore candidate: small premium for resilience
+NB-0039,Bed Bath Wipes,C,Saigon Textile Medical,Vietnam,Monterrey Surgical SA,Mexico,544,32.28,35.02,8.3,4.0,18374.07,19498.1,-1124.04,-0.0612,1664.06,Keep offshore
+NB-0044,Hand Sanitizer 500ml,C,Saigon Textile Medical,Vietnam,Monterrey Surgical SA,Mexico,621,37.9,41.12,8.3,4.0,24588.69,26101.37,-1512.68,-0.0615,2210.92,Keep offshore
+NB-0037,Incontinence Brief L,C,Saigon Textile Medical,Vietnam,Monterrey Surgical SA,Mexico,1495,16.29,17.67,8.3,4.0,25435.89,26999.86,-1563.97,-0.0615,2287.12,Keep offshore
+NB-0038,Underpad 30x36,C,Saigon Textile Medical,Vietnam,Monterrey Surgical SA,Mexico,1924,12.94,14.04,8.3,4.0,26089.21,27677.6,-1588.39,-0.0609,2383.76,Keep offshore
+NB-0030,Sterile Drape,B,Chennai Healthcare Exports,India,Monterrey Surgical SA,Mexico,572,164.01,171.57,9.4,4.0,98443.27,100269.12,-1825.86,-0.0185,11373.08,Nearshore candidate: small premium for resilience
+NB-0034,Suction Catheter,A,Chennai Healthcare Exports,India,Monterrey Surgical SA,Mexico,2232,60.46,63.25,9.4,4.0,142689.15,145065.44,-2376.29,-0.0167,17497.07,Nearshore candidate: small premium for resilience
+NB-0001,Nitrile Exam Gloves M,A,Shenzhen Diagnostics Co,China,Monterrey Surgical SA,Mexico,3432,42.16,44.48,10.8,4.0,153383.3,156167.1,-2783.8,-0.0181,23520.85,Nearshore candidate: small premium for resilience
+NB-0022,Urine Test Strips,A,Shenzhen Diagnostics Co,China,Monterrey Surgical SA,Mexico,1472,109.68,115.71,10.8,4.0,171043.84,174153.45,-3109.61,-0.0182,26217.05,Nearshore candidate: small premium for resilience
+NB-0002,Nitrile Exam Gloves L,B,Saigon Textile Medical,Vietnam,Monterrey Surgical SA,Mexico,1569,39.61,42.97,8.3,4.0,64879.7,68871.05,-3991.35,-0.0615,5833.72,Keep offshore
+NB-0005,N95 Respirator,B,Saigon Textile Medical,Vietnam,Monterrey Surgical SA,Mexico,1700,49.27,53.46,8.3,4.0,87479.53,92858.8,-5379.26,-0.0615,7865.61,Keep offshore
+NB-0024,Pulse Oximeter,A,Shenzhen Diagnostics Co,China,Monterrey Surgical SA,Mexico,12663,28.54,30.11,10.8,4.0,382939.27,389909.32,-6970.05,-0.0182,58682.06,Nearshore candidate: small premium for resilience
+NB-0009,Bouffant Cap,A,Saigon Textile Medical,Vietnam,Monterrey Surgical SA,Mexico,2830,42.88,46.53,8.3,4.0,126957.03,134734.17,-7777.14,-0.0613,11471.48,Keep offshore
+NB-0008,Shoe Covers,A,Saigon Textile Medical,Vietnam,Monterrey Surgical SA,Mexico,6179,35.39,38.4,8.3,4.0,228909.15,242909.18,-14000.03,-0.0612,20740.55,Keep offshore
+NB-0007,Face Shield,A,Penang Glove Industries,Malaysia,Monterrey Surgical SA,Mexico,8437,21.4,24.63,8.5,4.0,188360.26,212109.04,-23748.78,-0.1261,15984.24,Keep offshore

@@ -1,0 +1,9 @@
+country,region,price,freight,duty,brokerage,landed_total,avg_lead_time_wks,on_time_rate
+Malaysia,Offshore,97.0,9.7,0.0,1.45,108.16,8.5,0.692
+Vietnam,Offshore,102.0,11.22,0.0,1.53,114.75,8.3,0.791
+China,Offshore,100.0,10.0,6.5,1.5,118.0,10.8,0.683
+India,Offshore,100.0,11.0,6.5,1.5,119.0,9.4,0.723
+Mexico,Nearshore,118.0,5.31,0.0,1.18,124.49,4.0,0.808
+Germany,Offshore,120.0,8.4,0.0,1.2,129.6,5.8,0.934
+USA,Nearshore,138.0,4.14,0.0,1.38,143.52,2.9,0.942
+Canada,Domestic,145.0,2.17,0.0,0.0,147.17,1.8,0.977
