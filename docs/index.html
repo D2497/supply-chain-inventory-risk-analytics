@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supply Chain Control Tower</title>
+<meta name="description" content="Inventory optimization, demand forecasting and supplier risk analytics. Built with Python, SQL and Excel.">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f4f4f1;--surface:#fcfcfb;--surface-2:#f0efea;--border:#e1e0d9;
+  --ink:#0b0b0b;--ink-2:#52514e;--ink-3:#7a7974;
+  --accent:#2a78d6;--accent-ink:#1d5aa6;--series-2:#eb6834;
+  --good:#0ca30c;--warning:#fab219;--serious:#ec835a;--critical:#d03b3b;
+  --good-ink:#006300;--crit-ink:#b02a2a;
+  --seq0:#eef5fd;--seq1:#c6dcf6;--seq2:#8fbaec;--seq3:#4f92de;--seq4:#2a78d6;--seq5:#1d5aa6;--seq6:#123d73;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121211;--surface:#1a1a19;--surface-2:#232321;--border:#2c2c2a;
+    --ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#8f8e86;
+    --accent:#3987e5;--accent-ink:#8fbaec;--series-2:#d95926;
+    --good-ink:#0ca30c;--crit-ink:#e66767;
+    --seq0:#1d2a3a;--seq1:#1f3b5e;--seq2:#22508a;--seq3:#2a65b0;--seq4:#3987e5;--seq5:#6aa6ec;--seq6:#a9cdf4;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121211;--surface:#1a1a19;--surface-2:#232321;--border:#2c2c2a;
+  --ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#8f8e86;
+  --accent:#3987e5;--accent-ink:#8fbaec;--series-2:#d95926;
+  --good-ink:#0ca30c;--crit-ink:#e66767;
+  --seq0:#1d2a3a;--seq1:#1f3b5e;--seq2:#22508a;--seq3:#2a65b0;--seq4:#3987e5;--seq5:#6aa6ec;--seq6:#a9cdf4;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:28px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);font-weight:600;margin:0 0 4px}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.15;margin:0;letter-spacing:-.01em}
+.sub{color:var(--ink-2);margin:6px 0 0;max-width:720px}
+.links{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--ink);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.note{font-size:13px;color:var(--ink-2);background:var(--surface-2);border-radius:8px;padding:8px 12px;margin:0 0 20px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.kpi .label{font-size:13px;color:var(--ink-2)}
+.kpi .value{font-size:26px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:2px 0}
+.kpi .ctx{font-size:12.5px;color:var(--ink-3)}
+.kpi .ctx b{color:var(--good-ink);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.span-7{grid-column:span 7}.span-5{grid-column:span 5}.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-4{grid-column:span 4}
+@media (max-width:900px){.span-7,.span-5,.span-8,.span-4{grid-column:span 12}}
+.card h2{font-size:17px;margin:0;letter-spacing:-.005em}
+.card .desc{font-size:13.5px;color:var(--ink-2);margin:4px 0 14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+select,input[type=range]{font:inherit}
+select{background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:8px;padding:7px 10px;max-width:100%}
+.table-wrap{overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface-2);font-weight:600;color:var(--ink-2);font-size:12.5px;z-index:1}
+td.num,th.num{text-align:right}
+tbody tr:hover{background:var(--surface-2)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--ink)}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.muted{color:var(--ink-3)}
+svg text{fill:var(--ink-2);font-size:12px;font-family:inherit}
+.bars .bar-row{display:grid;grid-template-columns:minmax(120px,190px) 1fr 82px;gap:10px;align-items:center;padding:6px 4px;border-radius:6px;cursor:pointer}
+.bars .bar-row:hover,.bars .bar-row.sel{background:var(--surface-2)}
+.bar-name{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-name small{color:var(--ink-3)}
+.track{height:14px;background:var(--surface-2);border-radius:4px;position:relative}
+.fill{height:100%;border-radius:0 4px 4px 0}
+@media (max-width:560px){.bars .bar-row{grid-template-columns:1fr 82px;row-gap:4px}.bars .track{grid-column:1/-1;grid-row:2}}
+.bar-val{font-size:13px;font-variant-numeric:tabular-nums;display:flex;gap:6px;align-items:center}
+.detail{margin-top:12px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:13.5px}
+.detail .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:8px 0}
+.detail .stats div span{display:block;font-size:12px;color:var(--ink-3)}
+.detail .stats div b{font-variant-numeric:tabular-nums}
+.sim-out{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+@media (max-width:520px){.sim-out{grid-template-columns:1fr}}
+.sim-out div{background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.sim-out span{font-size:12px;color:var(--ink-2);display:block}
+.sim-out b{font-size:22px;font-variant-numeric:tabular-nums}
+.slider{display:flex;align-items:center;gap:10px;flex:1;min-width:200px}
+.slider input{flex:1;accent-color:var(--accent)}
+.matrix{display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;font-size:13px}
+.matrix .cell{border-radius:6px;padding:12px 6px;text-align:center;cursor:pointer;border:2px solid transparent;min-height:62px;display:flex;flex-direction:column;justify-content:center}
+.matrix .cell.sel{border-color:var(--ink)}
+.matrix .cell b{font-size:18px}
+.matrix .hd{color:var(--ink-2);display:flex;align-items:center;justify-content:center;padding:4px;font-size:12.5px;text-align:center}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px}
+.chart{position:relative}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--surface);font-size:12.5px;padding:6px 9px;border-radius:6px;white-space:nowrap;opacity:0;transition:opacity .1s;z-index:5}
+.method{font-size:13px;color:var(--ink-2);margin-top:6px}
+.formulas{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;font-size:13.5px}
+.formulas div{background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.formulas code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--ink)}
+footer{margin-top:24px;font-size:13px;color:var(--ink-3);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+footer a{color:var(--accent-ink)}
+.stack{display:flex;height:16px;border-radius:0 4px 4px 0;overflow:hidden;gap:2px}
+.stack span{display:block;height:100%}
+.lc-row{display:grid;grid-template-columns:92px minmax(0,1fr) 36px;gap:10px;align-items:center;padding:5px 0;font-size:13px}
+.lc-row small{color:var(--ink-3)}
+.keyrow{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin-bottom:8px}
+.keyrow i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.lc-grid{display:grid;grid-template-columns:minmax(300px,5fr) 7fr;gap:24px}
+.lc-grid>div{min-width:0}
+.lc-row>div{min-width:0}
+.lc-row small{display:block}
+@media (max-width:900px){.lc-grid{grid-template-columns:1fr}}
+.footer-note{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Supply chain analytics · Python · SQL · Excel</p>
+      <h1>Supply Chain Control Tower</h1>
+      <p class="sub">Inventory optimization, demand forecasting and supplier risk for <b id="h-co"></b>, <span id="h-desc"></span>, with <span id="h-skus"></span> SKUs and <span id="h-sups"></span> global suppliers.</p>
+    </div>
+    <div class="links">
+      <a class="btn primary" id="repo-link" href="#">View code on GitHub</a>
+      <button class="btn" id="theme-btn" type="button" aria-label="Toggle dark mode">◐ Theme</button>
+    </div>
+  </header>
+  <p class="note" id="src-note"></p>
+
+  <section class="kpis" id="kpis" aria-label="Key results"></section>
+
+  <div class="grid">
+    <section class="card span-7">
+      <h2>What to order today</h2>
+      <p class="desc">Inventory position (on hand + on order) compared with each SKU's safety stock and reorder point, at a <span id="svc"></span> service level.</p>
+      <div class="row" id="status-filter" role="group" aria-label="Filter by status"></div>
+      <div class="table-wrap"><table id="alerts"><thead><tr>
+        <th>SKU</th><th>Product · supplier</th><th>Status</th><th class="num">Position</th><th class="num">Reorder pt</th><th class="num">Order qty</th>
+      </tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="card span-5">
+      <h2>Supplier risk score</h2>
+      <p class="desc">Weighted score from on-time delivery, lead-time variability, defects, country risk and spend share. Click a supplier for details.</p>
+      <div class="bars" id="risk-bars"></div>
+      <div class="detail" id="sup-detail" aria-live="polite"></div>
+    </section>
+
+    <section class="card span-12">
+      <h2>Disruption simulator</h2>
+      <p class="desc">What happens if a supplier is delayed (port strike, tariff hold, factory shutdown)? Pick a supplier and a delay to see which SKUs run out.</p>
+      <div class="row">
+        <label for="sim-sup" class="sr">Supplier</label>
+        <select id="sim-sup"></select>
+        <div class="slider"><label for="sim-delay">Extra delay</label><input type="range" id="sim-delay" min="0" max="12" step="1" value="4"><b id="sim-delay-v" style="min-width:70px"></b></div>
+      </div>
+      <div class="sim-out">
+        <div><span>SKUs that stock out</span><b id="sim-n"></b></div>
+        <div><span>Revenue at risk</span><b id="sim-rev"></b></div>
+        <div><span>Extra buffer stock to prevent it</span><b id="sim-buf"></b></div>
+      </div>
+      <div class="table-wrap" style="max-height:300px"><table id="sim-table"><thead><tr>
+        <th>SKU</th><th>Product</th><th class="num">Weeks of stock</th><th class="num">New lead time</th><th>Outcome</th><th class="num">Units short</th><th class="num">Revenue at risk</th>
+      </tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="card span-8">
+      <h2>Demand forecast explorer</h2>
+      <p class="desc">Five methods compete for each SKU. The winner is picked on a validation window and graded on the last 12 weeks, which it never saw.</p>
+      <div class="row"><label for="fc-sku" class="sr">SKU</label><select id="fc-sku"></select></div>
+      <div class="legend"><span><i style="border-color:var(--accent)"></i>Actual weekly demand</span><span><i style="border-color:var(--series-2);border-top-style:dashed"></i>12-week forecast</span></div>
+      <div class="chart" id="fc-chart"><div class="tip" id="fc-tip"></div></div>
+      <p class="method" id="fc-method"></p>
+    </section>
+
+    <section class="card span-4">
+      <h2>ABC-XYZ segmentation</h2>
+      <p class="desc">ABC = share of spend. XYZ = how predictable demand is. Click a cell for its stocking strategy.</p>
+      <div class="matrix" id="matrix"></div>
+      <div class="detail" id="seg-detail" aria-live="polite"></div>
+    </section>
+
+    <section class="card span-12">
+      <h2>Logistics &amp; landed cost: offshore vs nearshore</h2>
+      <p class="desc">The real cost of an item once it lands in the warehouse: price, freight, duty and brokerage, plus the cost of the safety stock and in-transit inventory that a long lead time needs.</p>
+      <div class="sim-out" id="lc-kpis"></div>
+      <div class="lc-grid">
+        <div>
+          <div class="keyrow"><span><i style="background:var(--accent)"></i>Price</span><span><i style="background:var(--series-2)"></i>Freight</span><span><i style="background:#1baf7a"></i>Duty</span><span><i style="background:#eda100"></i>Brokerage</span></div>
+          <div id="lc-bars"></div>
+          <p class="footer-note">Cost to land CAD 100 of product (China price level). Lead time measured from purchase orders. Duty rates are illustrative.</p>
+        </div>
+        <div>
+          <div class="row" id="lc-filter" role="group" aria-label="Filter by recommendation"></div>
+          <div class="table-wrap" style="max-height:330px"><table id="lc-table"><thead><tr>
+            <th>SKU</th><th>Product</th><th>Now → nearshore</th><th class="num">Lead time</th><th class="num">Saving/yr</th><th class="num">Inventory freed</th><th>Recommendation</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card span-12">
+      <h2>How it's calculated</h2>
+      <div class="formulas">
+        <div><b>Safety stock</b><br><code>z × √(LT·σd² + d²·σLT²)</code><br><span class="muted">Covers both demand and lead-time uncertainty. σd = forecast error.</span></div>
+        <div><b>Reorder point</b><br><code>d × LT + safety stock</code><br><span class="muted">Order when inventory position falls to this level.</span></div>
+        <div><b>Economic order quantity</b><br><code>√(2·D·S / H)</code><br><span class="muted">Balances ordering cost against holding cost.</span></div>
+        <div><b>Total landed cost</b><br><code>units × price × (1 + freight + duty + brokerage) + (SS + in-transit) × unit × holding %</code><br><span class="muted">Compares offshore and nearshore sources on total cost, not just price.</span></div>
+        <div><b>Forecast accuracy (WAPE)</b><br><code>Σ|actual − forecast| / Σ actual</code><br><span class="muted">Works when a week has zero sales, unlike MAPE.</span></div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <span>Built by <b>Dhruvilkumar Upadhyay</b> · Master Certificate in Global Supply Chain Management, Michigan State University</span>
+    <span>Generated by <code>python src/main.py</code></span>
+  </footer>
+</div>
+
+<script>
+const DATA = {"firstWeek":"2024-01-01","markup":1.35,"serviceLevel":0.95,"kpi":{"spend":5944103.0,"skus":49,"suppliers":8,"aCount":15,"aShare":0.813,"aSkuShare":0.306,"wape":0.27,"wapeNaive":0.311,"eoqSave":23897.0,"eoqPct":0.215,"excess":289695.0,"otd":0.852,"orderNow":12,"critical":2,"over":10,"highRisk":2},"skus":[{"sku":"NB-0033","name":"Hemostat Forceps","cat":"Surgical","sup":"S03","abc":"A","xyz":"Y","status":"Overstock","onHand":2581,"onOrder":1075,"pos":3656,"ss":654.0,"rop":2334.0,"eoq":279.0,"orderQty":0.0,"d":287.02,"lt":5.85,"cost":148.89,"spend":2137762.62,"cover":9.0,"method":"Seasonal Exp. Smoothing","wape":0.45,"hist":[428,293,209,501,204,190,68,388,344,489,105,389,250,321,78,383,315,233,298,161,179,189,56,315,346,166,266,207,265,174,150,338,232,437,246,151,368,311,323,374,186,242,240,123,234,409,292,120,98,456,263,201,244,109,436,232,431,282,437,304,370,354,342,310,244,480,168,267,267,307,216,295,243,92,260,142,75,273,311,315,320,54,116,476,151,333,193,279,202,338,293,228,161,316,145,341,607,457,384,288,62,139,463,206],"fc":[276.8,275.4,293.4,267.5,273.0,275.1,275.6,295.4,292.4,314.3,297.8,307.4]},{"sku":"NB-0026","name":"Lancets 28G","cat":"Diagnostics","sup":"S02","abc":"A","xyz":"Y","status":"Overstock","onHand":1029,"onOrder":392,"pos":1421,"ss":199.0,"rop":575.0,"eoq":236.0,"orderQty":0.0,"d":131.77,"lt":2.85,"cost":95.67,"spend":524749.95,"cover":7.8,"method":"Exp. Smoothing","wape":0.477,"hist":[81,76,128,158,114,128,57,90,77,53,106,42,64,82,72,98,93,103,97,102,77,81,83,74,63,64,55,77,68,58,59,50,94,78,61,99,72,56,115,81,87,102,136,108,76,130,102,178,122,52,137,190,179,189,94,158,103,133,83,102,99,146,140,121,71,98,84,124,128,121,74,26,47,116,74,65,114,105,79,72,76,84,114,91,100,113,62,111,88,34,46,78,126,118,124,183,84,128,142,109,138,81,193,117],"fc":[131.8,131.8,131.8,131.8,131.8,131.8,131.8,131.8,131.8,131.8,131.8,131.8]},{"sku":"NB-0003","name":"Vinyl Gloves S","cat":"PPE","sup":"S02","abc":"A","xyz":"Y","status":"Healthy","onHand":869,"onOrder":0,"pos":869,"ss":190.0,"rop":716.0,"eoq":421.0,"orderQty":0.0,"d":184.43,"lt":2.85,"cost":42.0,"spend":326718.0,"cover":4.7,"method":"Seasonal Exp. Smoothing","wape":0.305,"hist":[160,181,199,158,216,122,168,269,170,212,157,170,142,133,108,142,98,138,145,120,98,114,92,119,52,85,47,59,124,114,79,62,28,91,174,126,103,138,80,126,145,145,183,173,192,142,214,251,140,147,252,183,260,173,264,200,205,263,171,142,161,196,106,193,140,200,62,117,82,107,136,118,112,110,117,82,124,121,113,118,112,158,105,102,93,88,85,100,131,151,148,124,194,196,166,151,210,200,127,199,220,164,223,139],"fc":[187.3,176.5,186.6,184.1,184.2,181.6,182.7,186.9,180.1,189.7,182.9,190.7]},{"sku":"NB-0025","name":"BP Cuff Adult","cat":"Diagnostics","sup":"S02","abc":"A","xyz":"Y","status":"Overstock","onHand":704,"onOrder":0,"pos":704,"ss":47.0,"rop":285.0,"eoq":215.0,"orderQty":0.0,"d":83.5,"lt":2.85,"cost":73.08,"spend":253149.12,"cover":8.4,"method":"Seasonal Naive","wape":0.131,"hist":[87,79,88,99,86,84,74,100,90,87,86,80,72,70,65,80,65,57,59,49,59,47,50,51,47,45,44,43,42,43,51,46,44,47,56,57,59,57,65,61,65,76,78,69,72,81,95,70,88,77,84,87,87,86,90,85,77,93,91,90,71,82,82,68,72,68,77,74,52,70,51,57,55,44,49,45,46,44,47,43,42,47,46,48,44,44,48,49,58,62,59,70,73,69,65,83,75,79,78,76,73,90,80,110],"fc":[87.0,86.0,90.0,85.0,77.0,93.0,91.0,90.0,71.0,82.0,82.0,68.0]},{"sku":"NB-0024","name":"Pulse Oximeter","cat":"Diagnostics","sup":"S08","abc":"A","xyz":"Y","status":"Critical - expedite","onHand":776,"onOrder":0,"pos":776,"ss":779.0,"rop":3422.0,"eoq":637.0,"orderQty":3283.0,"d":243.52,"lt":10.85,"cost":24.19,"spend":247415.32,"cover":3.2,"method":"Seasonal Exp. Smoothing","wape":0.293,"hist":[262,174,230,274,168,188,211,133,200,232,194,198,209,165,241,278,163,211,167,195,251,193,78,184,219,148,204,125,88,165,76,150,227,72,106,121,175,163,266,248,227,212,232,158,272,148,281,309,246,222,264,35,260,231,235,287,230,154,221,232,232,231,282,143,217,278,95,201,154,161,129,164,261,103,105,97,238,134,153,136,111,144,271,224,120,196,126,81,229,242,242,163,185,244,228,184,110,225,292,145,271,253,284,294],"fc":[242.2,249.2,261.8,244.6,247.6,235.3,221.1,229.3,246.5,239.2,250.1,255.3]},{"sku":"NB-0023","name":"Digital Thermometer","cat":"Diagnostics","sup":"S02","abc":"A","xyz":"X","status":"Order now","onHand":135,"onOrder":0,"pos":135,"ss":57.0,"rop":233.0,"eoq":175.0,"orderQty":273.0,"d":61.52,"lt":2.85,"cost":80.78,"spend":202273.12,"cover":2.2,"method":"Seasonal Exp. Smoothing","wape":0.288,"hist":[46,39,50,46,38,51,54,53,47,45,49,50,46,37,40,40,31,38,43,36,38,33,31,32,28,27,34,34,27,33,31,33,34,37,35,41,38,41,37,50,45,47,39,44,55,52,42,58,51,62,55,57,63,52,51,56,61,49,47,59,51,51,43,47,49,52,43,52,41,40,47,41,37,38,42,42,33,36,36,32,36,36,41,42,37,39,43,40,46,45,43,44,58,52,63,53,59,73,55,51,71,59,65,62],"fc":[60.9,60.6,60.0,59.1,60.8,62.6,62.7,62.9,62.7,63.0,61.7,61.3]},{"sku":"NB-0027","name":"Specimen Collection Cup","cat":"Diagnostics","sup":"S02","abc":"A","xyz":"Y","status":"Order now","onHand":213,"onOrder":0,"pos":213,"ss":58.0,"rop":224.0,"eoq":180.0,"orderQty":191.0,"d":58.0,"lt":2.85,"cost":72.03,"spend":165380.88,"cover":3.7,"method":"Naive","wape":0.301,"hist":[76,54,65,53,53,47,53,55,42,48,42,68,45,58,41,43,29,35,39,48,36,43,37,43,31,47,28,26,24,46,37,30,42,39,49,25,35,35,24,50,41,51,68,44,44,51,61,46,46,65,58,32,41,72,59,46,52,54,61,38,42,53,48,53,35,48,53,46,42,38,31,36,44,34,28,30,34,29,35,35,37,41,39,27,27,34,32,28,35,35,35,39,54,47,70,49,46,50,54,57,76,45,64,58],"fc":[58.0,58.0,58.0,58.0,58.0,58.0,58.0,58.0,58.0,58.0,58.0,58.0]},{"sku":"NB-0008","name":"Shoe Covers","cat":"PPE","sup":"S07","abc":"A","xyz":"Y","status":"Overstock","onHand":1787,"onOrder":0,"pos":1787,"ss":324.0,"rop":1313.0,"eoq":390.0,"orderQty":0.0,"d":118.83,"lt":8.32,"cost":31.46,"spend":158180.88,"cover":15.0,"method":"Seasonal Naive","wape":0.339,"hist":[194,174,110,130,148,117,116,142,102,73,82,117,90,97,103,66,94,79,34,95,46,20,31,30,49,42,40,57,52,53,56,63,10,48,9,65,68,102,113,89,70,110,77,102,148,87,152,151,77,173,163,135,92,88,104,159,82,150,65,113,125,227,52,169,109,114,98,104,79,123,61,101,49,61,35,67,85,52,48,30,48,21,36,63,92,135,53,113,85,78,103,96,104,89,51,47,153,114,102,137,184,154,109,219],"fc":[92.0,88.0,104.0,159.0,82.0,150.0,65.0,113.0,125.0,227.0,52.0,169.0]},{"sku":"NB-0021","name":"Glucose Test Strips","cat":"Diagnostics","sup":"S03","abc":"A","xyz":"Y","status":"Overstock","onHand":1013,"onOrder":193,"pos":1206,"ss":94.0,"rop":420.0,"eoq":195.0,"orderQty":0.0,"d":55.57,"lt":5.85,"cost":59.05,"spend":140893.3,"cover":18.2,"method":"Exp. Smoothing","wape":0.318,"hist":[79,46,60,50,91,76,73,72,59,62,37,20,57,58,70,74,72,34,42,52,77,62,56,37,30,50,27,37,39,59,36,12,48,34,44,43,42,57,26,41,60,42,28,64,72,55,24,69,30,64,44,39,52,56,48,69,51,74,62,45,41,28,58,46,15,42,35,68,23,25,57,59,32,33,46,12,17,35,54,32,38,50,61,32,39,61,22,53,29,44,41,32,33,51,63,48,52,60,37,65,67,96,49,48],"fc":[55.6,55.6,55.6,55.6,55.6,55.6,55.6,55.6,55.6,55.6,55.6,55.6]},{"sku":"NB-0001","name":"Nitrile Exam Gloves M","cat":"PPE","sup":"S08","abc":"A","xyz":"Y","status":"Overstock","onHand":1257,"onOrder":314,"pos":1571,"ss":221.0,"rop":938.0,"eoq":273.0,"orderQty":0.0,"d":66.0,"lt":10.85,"cost":35.73,"spend":137739.15,"cover":19.0,"method":"Naive","wape":0.198,"hist":[119,138,108,114,103,100,74,107,91,157,137,98,62,51,110,82,84,29,88,75,39,51,64,58,50,53,50,57,82,7,51,60,64,52,25,71,104,33,92,65,74,51,72,121,103,140,126,106,149,109,123,87,99,74,129,58,121,88,129,114,144,108,40,80,48,63,112,87,52,43,64,36,46,63,77,65,12,57,53,59,80,16,42,64,26,84,65,77,50,82,91,75,77,81,54,75,77,94,114,56,85,135,68,66],"fc":[66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0]},{"sku":"NB-0007","name":"Face Shield","cat":"PPE","sup":"S05","abc":"A","xyz":"Y","status":"Overstock","onHand":2054,"onOrder":513,"pos":2567,"ss":291.0,"rop":1666.0,"eoq":583.0,"orderQty":0.0,"d":162.25,"lt":8.47,"cost":19.19,"spend":127248.89,"cover":12.7,"method":"Seasonal Naive","wape":0.09,"hist":[123,142,162,167,169,177,166,191,150,142,163,119,149,138,127,149,108,141,103,84,96,78,79,88,87,73,88,89,93,85,95,64,83,81,97,93,103,138,114,130,125,137,142,156,176,192,170,180,146,173,198,199,185,201,191,206,184,166,179,105,171,84,119,156,150,115,117,144,109,142,105,105,114,92,75,82,80,65,75,70,87,79,78,82,89,97,82,86,119,104,95,129,136,108,145,160,159,170,133,173,164,163,195,211],"fc":[185.0,201.0,191.0,206.0,184.0,166.0,179.0,105.0,171.0,84.0,119.0,156.0]},{"sku":"NB-0034","name":"Suction Catheter","cat":"Surgical","sup":"S06","abc":"A","xyz":"Y","status":"Healthy","onHand":646,"onOrder":0,"pos":646,"ss":177.0,"rop":583.0,"eoq":185.0,"orderQty":0.0,"d":42.92,"lt":9.45,"cost":50.81,"spend":124230.45,"cover":15.1,"method":"Seasonal Naive","wape":0.501,"hist":[32,39,27,25,41,30,32,31,49,39,39,50,39,38,47,50,39,42,30,29,51,46,47,44,41,50,53,53,39,59,44,50,45,45,32,52,82,38,44,37,37,66,35,38,22,34,20,55,88,41,21,60,36,67,43,37,44,59,44,40,44,28,53,20,40,58,51,55,45,64,60,53,60,57,39,26,52,54,62,32,33,53,45,18,53,19,33,69,77,29,44,50,78,42,42,76,45,63,27,49,24,34,67,52],"fc":[36.0,67.0,43.0,37.0,44.0,59.0,44.0,40.0,44.0,28.0,53.0,20.0]},{"sku":"NB-0022","name":"Urine Test Strips","cat":"Diagnostics","sup":"S08","abc":"A","xyz":"Y","status":"Order now","onHand":395,"onOrder":0,"pos":395,"ss":93.0,"rop":401.0,"eoq":111.0,"orderQty":117.0,"d":28.3,"lt":10.85,"cost":92.95,"spend":110238.7,"cover":14.0,"method":"Seasonal Exp. Smoothing","wape":0.251,"hist":[23,23,17,18,22,16,17,19,23,16,10,9,12,11,15,11,13,12,13,18,15,13,11,11,13,14,9,12,6,13,15,12,19,11,15,15,15,16,17,21,24,19,23,17,25,18,28,35,23,11,21,32,28,26,31,28,32,30,33,26,29,22,20,31,23,25,21,17,19,25,20,10,16,24,15,9,23,18,15,14,20,14,20,19,18,18,17,24,16,13,25,26,26,26,23,31,27,24,26,43,17,34,18,31],"fc":[27.9,29.3,29.4,28.7,28.8,29.1,30.6,29.4,28.0,27.2,26.4,24.7]},{"sku":"NB-0015","name":"Elastic Bandage 3in","cat":"Wound Care","sup":"S01","abc":"A","xyz":"Y","status":"Healthy","onHand":162,"onOrder":0,"pos":162,"ss":50.0,"rop":127.0,"eoq":202.0,"orderQty":0.0,"d":42.08,"lt":1.82,"cost":41.74,"spend":92704.54,"cover":3.8,"method":"Seasonal Naive","wape":0.4,"hist":[51,21,30,63,53,40,27,32,40,39,37,38,36,20,32,49,21,35,28,39,33,56,44,21,46,28,31,41,32,49,28,30,30,31,53,47,61,69,27,41,25,31,33,27,27,40,26,54,30,82,37,44,25,68,60,48,25,47,28,65,55,45,9,30,53,60,59,21,47,57,20,43,46,38,17,38,38,40,35,37,42,49,39,38,45,16,51,44,45,59,16,16,50,46,49,40,58,62,55,44,15,61,68,59],"fc":[25.0,68.0,60.0,48.0,25.0,47.0,28.0,65.0,55.0,45.0,9.0,30.0]},{"sku":"NB-0009","name":"Bouffant Cap","cat":"PPE","sup":"S07","abc":"A","xyz":"Y","status":"Order now","onHand":125,"onOrder":157,"pos":282,"ss":141.0,"rop":594.0,"eoq":240.0,"orderQty":552.0,"d":54.42,"lt":8.32,"cost":38.12,"spend":81005.0,"cover":2.3,"method":"Seasonal Naive","wape":0.298,"hist":[66,56,60,62,61,55,54,52,37,50,32,35,49,44,46,32,25,29,29,27,31,22,24,18,23,20,17,19,20,20,28,22,22,15,22,26,26,40,32,44,38,40,41,44,61,27,31,46,53,61,60,52,67,67,58,66,58,49,61,53,51,63,26,34,34,39,38,27,29,28,46,40,26,25,20,16,23,18,22,16,19,23,25,26,19,31,25,34,33,26,35,42,46,43,60,58,48,60,75,77,45,49,77,49],"fc":[67.0,67.0,58.0,66.0,58.0,49.0,61.0,53.0,51.0,63.0,26.0,34.0]},{"sku":"NB-0031","name":"Surgical Sponge","cat":"Surgical","sup":"S04","abc":"B","xyz":"Y","status":"Healthy","onHand":40,"onOrder":40,"pos":80,"ss":20.0,"rop":70.0,"eoq":64.0,"orderQty":0.0,"d":12.39,"lt":4.0,"cost":125.32,"spend":71933.68,"cover":3.2,"method":"Exp. Smoothing","wape":0.341,"hist":[9,11,10,8,3,8,5,2,6,5,12,12,6,8,2,7,11,13,6,13,3,4,12,16,11,9,0,1,10,8,5,10,10,13,10,14,10,9,14,6,22,11,11,12,18,13,3,16,9,11,5,13,7,11,9,19,19,10,11,9,15,9,8,14,8,10,3,13,18,13,16,6,11,6,9,13,10,4,4,4,12,19,16,2,16,14,3,9,15,13,4,13,1,9,16,11,8,15,15,17,15,16,14,12],"fc":[12.4,12.4,12.4,12.4,12.4,12.4,12.4,12.4,12.4,12.4,12.4,12.4]},{"sku":"NB-0030","name":"Sterile Drape","cat":"Surgical","sup":"S06","abc":"B","xyz":"X","status":"Overstock","onHand":188,"onOrder":0,"pos":188,"ss":25.0,"rop":129.0,"eoq":57.0,"orderQty":0.0,"d":11.0,"lt":9.45,"cost":137.82,"spend":70012.56,"cover":17.1,"method":"Naive","wape":0.2,"hist":[8,7,6,8,6,8,6,8,7,6,7,7,7,7,7,7,7,7,7,7,7,8,8,8,9,7,7,8,7,7,7,8,7,8,8,8,8,7,9,9,7,8,8,9,9,9,9,9,8,9,9,9,7,9,9,9,9,10,8,8,9,10,11,10,8,9,10,10,10,9,9,10,10,9,9,7,9,9,9,10,10,8,10,9,10,9,10,10,11,11,10,9,9,10,11,11,12,11,11,11,12,12,14,11],"fc":[11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0]},{"sku":"NB-0045","name":"Sterilization Pouch","cat":"Sterilization","sup":"S03","abc":"B","xyz":"X","status":"Healthy","onHand":153,"onOrder":0,"pos":153,"ss":18.0,"rop":113.0,"eoq":91.0,"orderQty":0.0,"d":16.2,"lt":5.85,"cost":79.42,"spend":69015.98,"cover":9.4,"method":"Seasonal Exp. Smoothing","wape":0.184,"hist":[16,12,10,11,15,18,18,17,13,15,14,15,22,9,15,19,10,13,14,15,10,17,18,17,13,16,13,14,23,16,12,16,11,12,12,14,19,18,18,12,14,17,14,15,17,15,17,22,15,20,18,11,12,13,13,16,18,21,17,15,9,17,16,17,24,21,19,13,15,16,14,18,18,13,21,17,10,16,18,20,15,20,17,12,12,21,21,18,22,21,19,14,23,19,16,15,18,11,20,14,19,15,16,14],"fc":[14.4,13.8,14.9,16.2,17.3,18.1,17.5,17.0,15.7,15.3,16.7,17.5]},{"sku":"NB-0028","name":"Suture Kit 3-0","cat":"Surgical","sup":"S04","abc":"B","xyz":"Y","status":"Overstock","onHand":1158,"onOrder":483,"pos":1641,"ss":202.0,"rop":625.0,"eoq":723.0,"orderQty":0.0,"d":105.64,"lt":4.0,"cost":8.13,"spend":51186.48,"cover":11.0,"method":"Seasonal Exp. Smoothing","wape":0.452,"hist":[44,163,188,80,123,36,59,175,99,66,132,95,97,156,62,74,125,164,176,84,160,78,201,61,177,83,208,142,66,89,151,164,111,117,151,121,54,77,128,175,195,155,132,155,86,112,79,58,136,129,154,147,132,148,118,140,84,138,152,86,121,88,92,63,177,167,141,208,105,256,103,125,94,129,150,106,192,122,123,69,130,104,83,75,233,99,45,80,110,138,139,145,83,130,73,86,72,59,167,149,163,118,154,32],"fc":[119.2,110.8,114.8,115.0,105.9,101.6,102.2,97.1,102.8,97.7,96.7,103.8]},{"sku":"NB-0035","name":"Syringe 10ml","cat":"Surgical","sup":"S04","abc":"B","xyz":"X","status":"Healthy","onHand":50,"onOrder":0,"pos":50,"ss":10.0,"rop":47.0,"eoq":57.0,"orderQty":0.0,"d":9.02,"lt":4.0,"cost":113.28,"spend":49956.48,"cover":5.5,"method":"Seasonal Exp. Smoothing","wape":0.156,"hist":[6,6,6,7,7,4,6,7,6,7,7,6,6,6,8,6,6,7,8,6,8,8,7,6,6,6,8,7,7,6,6,9,7,6,9,7,8,7,7,7,6,7,8,10,8,5,8,12,9,7,9,7,6,8,8,6,7,8,8,9,7,9,7,11,6,7,9,11,9,9,9,7,8,7,7,9,7,9,7,9,8,11,9,11,8,9,8,9,9,8,7,7,6,8,11,7,8,13,9,11,11,11,8,10],"fc":[8.8,8.7,8.9,8.8,8.8,9.1,9.0,9.1,9.4,9.6,9.0,8.9]},{"sku":"NB-0005","name":"N95 Respirator","cat":"PPE","sup":"S07","abc":"B","xyz":"Y","status":"Healthy","onHand":371,"onOrder":0,"pos":371,"ss":71.0,"rop":343.0,"eoq":174.0,"orderQty":0.0,"d":32.69,"lt":8.32,"cost":43.8,"spend":47961.0,"cover":11.3,"method":"Seasonal Exp. Smoothing","wape":0.237,"hist":[27,26,29,22,22,22,26,28,21,20,22,19,22,12,15,15,10,13,13,13,15,12,10,12,13,10,10,12,11,12,12,13,10,13,13,12,12,18,16,15,18,23,13,17,19,28,25,28,21,21,28,27,29,26,28,28,30,30,20,17,29,28,20,16,22,24,25,20,17,15,16,15,13,19,17,15,11,14,14,13,15,14,14,15,15,11,16,15,14,23,24,24,22,27,23,25,21,28,27,22,28,29,38,34],"fc":[35.0,33.6,33.3,33.1,32.6,31.6,32.2,32.5,32.2,31.6,32.7,31.8]},{"sku":"NB-0017","name":"Alginate Dressing","cat":"Wound Care","sup":"S06","abc":"B","xyz":"Y","status":"Overstock","onHand":1026,"onOrder":228,"pos":1254,"ss":168.0,"rop":720.0,"eoq":400.0,"orderQty":0.0,"d":58.35,"lt":9.45,"cost":14.71,"spend":46704.25,"cover":17.6,"method":"Seasonal Exp. Smoothing","wape":0.367,"hist":[75,73,25,51,41,84,32,90,58,35,45,42,33,59,33,15,49,22,42,39,39,93,57,60,22,43,59,36,73,33,50,45,59,44,52,53,43,67,63,57,50,75,55,54,63,96,33,77,22,67,95,73,66,51,63,57,46,56,67,46,45,34,70,73,66,81,63,69,67,58,49,105,51,46,68,64,31,82,57,37,83,72,34,96,74,60,93,64,61,48,75,73,63,47,67,63,36,33,78,8,71,56,96,56],"fc":[67.6,59.2,55.4,55.6,53.9,59.9,60.5,59.2,56.8,58.7,54.7,58.7]},{"sku":"NB-0002","name":"Nitrile Exam Gloves L","cat":"PPE","sup":"S07","abc":"B","xyz":"Y","status":"Healthy","onHand":375,"onOrder":94,"pos":469,"ss":63.0,"rop":315.0,"eoq":186.0,"orderQty":0.0,"d":30.17,"lt":8.32,"cost":35.21,"spend":46019.47,"cover":12.4,"method":"Seasonal Naive","wape":0.169,"hist":[28,31,28,32,30,30,29,34,25,19,29,22,23,25,17,17,15,16,18,18,16,12,10,14,13,14,14,13,15,14,15,13,15,16,18,16,19,19,20,24,17,20,20,18,25,31,28,31,35,37,32,38,33,29,30,27,29,31,35,38,25,31,25,29,26,20,28,22,21,18,19,21,18,19,18,19,15,13,18,15,18,17,16,18,22,23,20,21,25,20,25,25,28,25,24,23,28,31,33,44,41,33,39,36],"fc":[33.0,29.0,30.0,27.0,29.0,31.0,35.0,38.0,25.0,31.0,25.0,29.0]},{"sku":"NB-0020","name":"Rapid Antigen Test Kit","cat":"Diagnostics","sup":"S03","abc":"B","xyz":"X","status":"Healthy","onHand":91,"onOrder":38,"pos":129,"ss":15.0,"rop":78.0,"eoq":70.0,"orderQty":0.0,"d":10.75,"lt":5.85,"cost":88.29,"spend":45116.19,"cover":8.5,"method":"Moving Average (4w)","wape":0.254,"hist":[13,9,8,12,12,9,7,9,10,12,8,9,11,5,11,7,9,9,10,9,4,7,8,7,8,8,8,7,5,7,8,6,9,9,8,4,6,11,8,6,11,9,12,10,11,11,12,15,13,8,12,13,14,10,13,13,16,9,10,10,10,9,5,9,10,9,13,9,11,9,10,9,10,8,9,8,7,8,11,7,8,9,9,8,5,9,5,11,9,11,8,7,10,10,9,10,16,12,13,13,14,11,7,11],"fc":[10.8,10.8,10.8,10.8,10.8,10.8,10.8,10.8,10.8,10.8,10.8,10.8]},{"sku":"NB-0048","name":"Enzymatic Cleaner 4L","cat":"Sterilization","sup":"S01","abc":"B","xyz":"Y","status":"Healthy","onHand":93,"onOrder":93,"pos":186,"ss":28.0,"rop":83.0,"eoq":187.0,"orderQty":0.0,"d":30.0,"lt":1.82,"cost":34.83,"spend":44234.1,"cover":3.1,"method":"Moving Average (4w)","wape":0.311,"hist":[22,34,28,14,16,26,16,2,21,8,37,24,14,16,5,12,31,43,29,21,18,13,41,20,42,35,6,16,16,22,22,50,12,24,28,22,23,13,23,27,26,28,36,31,23,11,17,20,25,18,14,11,7,20,9,13,19,10,26,30,18,19,28,16,15,34,31,29,32,4,36,27,33,27,23,20,27,20,32,8,18,43,17,21,15,26,16,21,32,16,31,31,34,25,55,34,27,15,22,38,40,38,31,11],"fc":[30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0]},{"sku":"NB-0047","name":"Biological Indicator","cat":"Sterilization","sup":"S03","abc":"B","xyz":"Y","status":"Healthy","onHand":83,"onOrder":0,"pos":83,"ss":19.0,"rop":76.0,"eoq":72.0,"orderQty":0.0,"d":9.69,"lt":5.85,"cost":75.33,"spend":37740.33,"cover":8.6,"method":"Seasonal Exp. Smoothing","wape":0.343,"hist":[7,9,7,7,9,5,7,7,6,6,7,7,5,9,5,7,6,8,3,9,6,10,6,7,12,7,10,8,8,8,10,6,5,6,8,7,9,11,6,6,5,13,9,9,5,8,9,8,11,14,6,6,6,13,11,8,9,7,11,8,8,10,8,8,9,11,14,11,11,9,7,11,10,5,8,9,8,14,11,14,10,10,7,10,10,6,8,9,11,12,8,12,10,1,9,14,5,11,16,8,11,7,16,11],"fc":[10.1,9.8,10.5,10.4,10.0,9.6,9.5,9.1,9.5,9.1,9.0,9.8]},{"sku":"NB-0029","name":"Scalpel Blade #10","cat":"Surgical","sup":"S04","abc":"B","xyz":"Y","status":"Healthy","onHand":258,"onOrder":0,"pos":258,"ss":53.0,"rop":186.0,"eoq":254.0,"orderQty":0.0,"d":33.25,"lt":4.0,"cost":20.74,"spend":37643.1,"cover":7.8,"method":"Moving Average (4w)","wape":0.322,"hist":[38,31,36,34,19,14,22,36,37,16,19,22,26,15,15,21,30,17,28,40,16,27,39,25,23,41,26,40,34,26,34,33,40,24,31,30,38,20,43,37,17,46,58,45,50,35,14,12,37,27,24,34,43,17,30,54,22,46,30,42,49,45,47,21,49,25,38,38,41,39,24,18,45,37,48,34,18,46,30,39,27,55,24,31,37,22,40,57,31,42,2,38,34,28,54,35,37,35,13,25,55,11,31,36],"fc":[33.2,33.2,33.2,33.2,33.2,33.2,33.2,33.2,33.2,33.2,33.2,33.2]},{"sku":"NB-0013","name":"Adhesive Bandage Strip","cat":"Wound Care","sup":"S06","abc":"B","xyz":"X","status":"Healthy","onHand":172,"onOrder":76,"pos":248,"ss":46.0,"rop":245.0,"eoq":153.0,"orderQty":0.0,"d":20.98,"lt":9.45,"cost":36.2,"spend":37286.0,"cover":8.2,"method":"Seasonal Exp. Smoothing","wape":0.144,"hist":[24,10,12,21,16,26,18,11,14,7,18,19,17,24,25,18,9,22,22,20,24,14,28,15,22,11,15,26,18,23,20,19,25,18,11,16,22,21,12,16,17,18,13,17,17,24,25,20,19,21,17,15,16,18,15,22,25,13,21,20,23,21,13,14,21,26,10,22,26,20,23,17,20,12,9,25,15,18,13,13,19,17,22,22,22,22,28,15,20,26,27,14,20,28,24,22,20,20,23,21,22,22,18,25],"fc":[19.0,20.6,21.5,21.8,23.3,23.7,22.7,20.8,19.6,18.7,19.4,20.8]},{"sku":"NB-0036","name":"IV Start Kit","cat":"Surgical","sup":"S03","abc":"B","xyz":"Y","status":"Order now","onHand":135,"onOrder":0,"pos":135,"ss":47.0,"rop":238.0,"eoq":219.0,"orderQty":322.0,"d":32.5,"lt":5.85,"cost":27.23,"spend":35507.92,"cover":4.2,"method":"Moving Average (4w)","wape":0.275,"hist":[10,34,10,13,13,11,28,34,17,12,6,18,18,16,21,22,21,17,13,23,19,24,24,11,11,15,13,24,21,26,22,21,27,23,21,30,21,19,16,26,30,22,31,9,22,23,18,40,23,21,24,9,19,31,20,18,34,34,28,21,23,18,17,17,20,17,13,26,26,36,19,26,26,22,29,29,26,22,21,14,18,20,16,28,34,18,28,18,24,21,31,21,35,25,22,17,30,36,31,49,42,27,27,34],"fc":[32.5,32.5,32.5,32.5,32.5,32.5,32.5,32.5,32.5,32.5,32.5,32.5]},{"sku":"NB-0011","name":"Gauze Pad 4x4","cat":"Wound Care","sup":"S02","abc":"B","xyz":"X","status":"Healthy","onHand":62,"onOrder":0,"pos":62,"ss":11.0,"rop":51.0,"eoq":109.0,"orderQty":0.0,"d":14.0,"lt":2.85,"cost":48.16,"spend":32122.72,"cover":4.4,"method":"Naive","wape":0.215,"hist":[13,9,12,16,9,13,11,15,12,14,14,16,13,14,10,15,12,12,13,10,13,14,13,10,12,14,9,11,14,13,13,16,13,14,17,12,11,14,14,12,11,17,14,12,15,13,13,14,11,14,17,14,13,12,13,13,13,15,10,15,13,14,11,15,15,15,10,14,13,10,13,13,13,13,13,15,14,8,12,12,10,13,14,11,13,11,11,15,12,13,10,16,14,13,14,11,15,12,13,12,12,14,14,14],"fc":[14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0]},{"sku":"NB-0004","name":"Surgical Mask Level 2","cat":"PPE","sup":"S08","abc":"B","xyz":"Z","status":"Order now","onHand":922,"onOrder":369,"pos":1291,"ss":469.0,"rop":1902.0,"eoq":896.0,"orderQty":1507.0,"d":132.0,"lt":10.85,"cost":6.62,"spend":31729.66,"cover":7.0,"method":"Naive","wape":0.372,"hist":[196,193,127,153,33,85,119,85,151,194,72,81,112,150,58,96,131,38,44,60,54,76,62,24,61,42,70,40,40,59,65,62,27,71,44,74,41,89,62,53,116,107,85,161,99,121,135,103,151,112,119,197,94,34,209,249,119,53,119,117,117,78,137,129,56,122,156,94,75,75,88,32,68,54,91,52,80,33,59,55,37,54,73,49,27,61,47,62,72,37,42,103,79,20,132,121,90,71,158,143,231,153,154,132],"fc":[132.0,132.0,132.0,132.0,132.0,132.0,132.0,132.0,132.0,132.0,132.0,132.0]},{"sku":"NB-0006","name":"Isolation Gown","cat":"PPE","sup":"S02","abc":"B","xyz":"Z","status":"Order now","onHand":317,"onOrder":0,"pos":317,"ss":124.0,"rop":410.0,"eoq":625.0,"orderQty":718.0,"d":100.17,"lt":2.85,"cost":10.33,"spend":30680.1,"cover":3.2,"method":"Seasonal Naive","wape":0.45,"hist":[80,87,81,74,48,73,56,41,84,78,24,60,81,77,72,50,32,26,45,42,50,44,28,16,24,28,23,20,27,21,21,31,26,35,38,22,33,65,27,12,18,58,61,61,96,3,83,117,46,68,59,56,73,124,136,72,135,80,126,73,76,79,144,84,46,77,47,42,63,44,45,38,39,38,10,36,18,13,25,26,19,34,14,25,24,32,39,24,52,45,16,16,55,54,60,65,74,96,45,45,48,89,119,71],"fc":[73.0,124.0,136.0,72.0,135.0,80.0,126.0,73.0,76.0,79.0,144.0,84.0]},{"sku":"NB-0018","name":"Transparent Film Dressing","cat":"Wound Care","sup":"S02","abc":"B","xyz":"X","status":"Healthy","onHand":154,"onOrder":0,"pos":154,"ss":18.0,"rop":91.0,"eoq":215.0,"orderQty":0.0,"d":25.56,"lt":2.85,"cost":22.28,"spend":29699.24,"cover":6.0,"method":"Exp. Smoothing","wape":0.137,"hist":[32,25,29,32,25,34,22,29,33,31,38,23,19,21,30,29,27,20,30,19,32,41,28,29,23,16,22,19,17,35,27,27,24,24,31,25,28,25,24,18,15,24,26,19,26,26,14,21,29,28,20,27,32,31,26,24,23,29,27,29,26,30,26,30,30,21,15,33,26,16,21,28,23,22,31,19,20,25,26,26,28,25,26,23,24,24,25,28,27,24,20,25,24,25,36,22,27,30,25,37,23,26,21,23],"fc":[25.6,25.6,25.6,25.6,25.6,25.6,25.6,25.6,25.6,25.6,25.6,25.6]},{"sku":"NB-0019","name":"Skin Closure Strips","cat":"Wound Care","sup":"S02","abc":"B","xyz":"X","status":"Healthy","onHand":69,"onOrder":38,"pos":107,"ss":7.0,"rop":36.0,"eoq":84.0,"orderQty":0.0,"d":10.0,"lt":2.85,"cost":57.94,"spend":29375.58,"cover":6.9,"method":"Naive","wape":0.174,"hist":[10,11,10,12,10,9,14,10,8,8,8,11,9,10,9,10,8,7,9,10,10,8,10,8,8,7,11,10,10,11,13,6,8,8,8,7,9,7,10,10,10,10,11,9,14,10,7,8,7,10,10,9,14,11,12,9,8,10,10,7,10,10,10,8,9,9,10,11,11,9,9,10,10,9,11,11,11,12,8,9,9,9,8,7,10,8,10,8,8,10,10,11,14,11,11,8,8,13,9,8,10,10,9,10],"fc":[10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0]},{"sku":"NB-0041","name":"Emesis Bag","cat":"Patient Care","sup":"S04","abc":"C","xyz":"X","status":"Healthy","onHand":54,"onOrder":54,"pos":108,"ss":15.0,"rop":83.0,"eoq":134.0,"orderQty":0.0,"d":17.0,"lt":4.0,"cost":38.36,"spend":27849.36,"cover":3.2,"method":"Naive","wape":0.07,"hist":[13,15,14,12,14,12,14,12,14,14,15,14,12,14,11,11,12,10,12,11,12,10,12,11,12,11,10,11,10,11,12,14,11,11,11,12,13,12,14,12,14,14,14,13,17,13,15,14,17,16,14,16,16,15,16,16,16,15,16,15,15,14,17,13,15,14,16,12,12,12,13,11,12,10,13,12,11,13,11,13,11,14,13,11,12,13,13,13,15,13,14,15,15,14,15,13,14,16,16,16,18,15,16,17],"fc":[17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0]},{"sku":"NB-0049","name":"Instrument Wrap","cat":"Sterilization","sup":"S01","abc":"C","xyz":"X","status":"Healthy","onHand":159,"onOrder":0,"pos":159,"ss":8.0,"rop":50.0,"eoq":203.0,"orderQty":0.0,"d":22.79,"lt":1.82,"cost":22.29,"spend":26547.39,"cover":7.0,"method":"Exp. Smoothing","wape":0.052,"hist":[23,19,19,23,23,24,23,23,20,22,19,18,24,20,24,25,21,23,21,18,22,21,21,27,19,23,20,24,23,23,20,21,24,26,23,20,23,28,23,26,21,22,24,23,21,21,25,25,26,26,23,22,25,24,20,20,24,22,22,25,24,26,18,23,24,19,21,21,23,26,27,21,24,24,24,24,23,26,25,20,24,25,23,25,23,23,23,18,23,21,20,26,24,23,22,23,25,21,23,25,18,23,22,23],"fc":[22.8,22.8,22.8,22.8,22.8,22.8,22.8,22.8,22.8,22.8,22.8,22.8]},{"sku":"NB-0032","name":"Skin Stapler","cat":"Surgical","sup":"S06","abc":"C","xyz":"X","status":"Healthy","onHand":222,"onOrder":0,"pos":222,"ss":27.0,"rop":144.0,"eoq":109.0,"orderQty":0.0,"d":12.33,"lt":9.45,"cost":42.11,"spend":26529.3,"cover":18.0,"method":"Seasonal Naive","wape":0.188,"hist":[13,13,11,11,13,14,16,13,15,15,12,14,12,15,14,10,13,15,12,13,13,10,13,10,11,14,13,12,13,12,12,13,11,12,12,9,11,15,13,10,10,12,15,12,15,13,13,10,14,12,14,11,13,13,12,13,12,11,15,14,11,13,11,10,14,9,14,12,12,13,13,10,13,12,10,11,14,14,13,10,12,13,13,13,12,11,11,8,12,12,13,9,13,15,12,12,12,15,10,12,11,11,12,14],"fc":[13.0,13.0,12.0,13.0,12.0,11.0,15.0,14.0,11.0,13.0,11.0,10.0]},{"sku":"NB-0038","name":"Underpad 30x36","cat":"Patient Care","sup":"S07","abc":"C","xyz":"Y","status":"Healthy","onHand":470,"onOrder":0,"pos":470,"ss":113.0,"rop":421.0,"eoq":360.0,"orderQty":0.0,"d":37.0,"lt":8.32,"cost":11.5,"spend":22965.5,"cover":12.7,"method":"Seasonal Naive","wape":0.351,"hist":[29,44,27,30,51,49,28,28,29,45,24,40,44,34,46,31,31,23,44,24,36,31,21,25,46,34,21,35,30,68,35,28,48,13,34,55,32,15,30,52,40,26,28,30,42,55,52,45,22,22,47,22,37,44,25,26,39,46,54,47,40,29,25,32,43,42,11,27,51,37,19,62,34,39,39,30,26,58,45,43,40,23,49,25,38,16,12,40,27,13,44,64,56,36,40,52,55,36,42,46,50,40,41,62],"fc":[37.0,44.0,25.0,26.0,39.0,46.0,54.0,47.0,40.0,29.0,25.0,32.0]},{"sku":"NB-0014","name":"Hydrocolloid Dressing","cat":"Wound Care","sup":"S01","abc":"C","xyz":"X","status":"Healthy","onHand":24,"onOrder":0,"pos":24,"ss":3.0,"rop":16.0,"eoq":74.0,"orderQty":0.0,"d":7.0,"lt":1.82,"cost":52.08,"spend":20727.84,"cover":3.4,"method":"Naive","wape":0.072,"hist":[9,6,7,7,8,7,8,8,7,8,5,8,7,8,6,6,7,7,7,8,6,8,7,7,6,7,5,7,6,7,7,8,7,7,7,8,8,7,7,6,8,6,8,8,9,7,8,9,9,7,8,8,8,7,8,7,8,8,8,7,9,8,7,8,7,7,7,9,7,8,7,8,7,8,7,6,7,7,7,8,7,9,6,8,7,7,8,6,8,9,8,8,9,8,8,6,9,8,8,9,8,8,9,7],"fc":[7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0]},{"sku":"NB-0044","name":"Hand Sanitizer 500ml","cat":"Patient Care","sup":"S07","abc":"C","xyz":"X","status":"Order now","onHand":97,"onOrder":0,"pos":97,"ss":25.0,"rop":125.0,"eoq":120.0,"orderQty":148.0,"d":11.95,"lt":8.32,"cost":33.69,"spend":20550.9,"cover":8.1,"method":"Exp. Smoothing","wape":0.169,"hist":[13,17,16,14,14,14,14,14,13,14,15,11,11,9,15,13,13,9,15,10,12,13,9,10,11,16,11,14,13,12,9,13,8,14,12,6,11,13,12,14,11,10,13,13,12,16,12,14,14,10,11,14,19,15,10,7,16,14,16,12,14,15,12,12,13,14,12,14,11,9,15,10,10,11,11,10,11,10,11,6,14,10,12,8,10,10,14,10,13,10,11,11,15,8,10,9,11,11,10,12,9,11,16,15],"fc":[12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0]},{"sku":"NB-0042","name":"Patient ID Band","cat":"Patient Care","sup":"S01","abc":"C","xyz":"Y","status":"Critical - expedite","onHand":36,"onOrder":0,"pos":36,"ss":39.0,"rop":125.0,"eoq":522.0,"orderQty":611.0,"d":46.75,"lt":1.82,"cost":6.92,"spend":18753.2,"cover":0.8,"method":"Moving Average (4w)","wape":0.216,"hist":[33,53,49,43,57,26,40,43,31,42,28,44,47,39,20,28,40,35,12,43,34,26,40,27,27,35,45,44,35,36,39,24,39,29,38,34,42,39,11,42,48,47,43,62,49,52,60,53,39,22,45,61,48,62,54,69,49,58,59,70,31,46,61,68,52,45,56,56,42,49,57,64,51,43,42,48,41,44,31,55,31,38,44,64,40,39,41,66,17,38,85,61,40,55,58,71,86,67,55,76,55,50,39,43],"fc":[46.8,46.8,46.8,46.8,46.8,46.8,46.8,46.8,46.8,46.8,46.8,46.8]},{"sku":"NB-0010","name":"Latex Gloves M","cat":"PPE","sup":"S02","abc":"C","xyz":"Y","status":"Healthy","onHand":176,"onOrder":0,"pos":176,"ss":44.0,"rop":151.0,"eoq":352.0,"orderQty":0.0,"d":37.5,"lt":2.85,"cost":12.2,"spend":18287.8,"cover":4.7,"method":"Moving Average (4w)","wape":0.448,"hist":[24,39,55,45,35,34,33,29,78,45,52,31,33,25,1,15,9,4,14,35,22,31,23,25,12,21,22,14,21,21,14,11,11,21,25,16,25,32,34,46,46,20,55,29,52,40,34,13,39,18,59,68,31,49,32,33,55,42,68,33,53,39,47,29,32,30,21,35,33,30,37,34,18,22,14,18,13,26,18,15,23,3,4,23,19,21,10,21,40,32,27,23,25,6,35,44,14,27,21,24,40,9,49,52],"fc":[37.5,37.5,37.5,37.5,37.5,37.5,37.5,37.5,37.5,37.5,37.5,37.5]},{"sku":"NB-0016","name":"Medical Tape 1in","cat":"Wound Care","sup":"S02","abc":"C","xyz":"X","status":"Healthy","onHand":218,"onOrder":0,"pos":218,"ss":15.0,"rop":82.0,"eoq":250.0,"orderQty":0.0,"d":23.25,"lt":2.85,"cost":15.02,"spend":17047.7,"cover":9.4,"method":"Moving Average (4w)","wape":0.147,"hist":[18,21,22,23,18,19,21,20,17,21,21,20,20,19,23,17,18,19,21,16,16,15,19,16,18,20,18,19,18,21,20,18,19,22,21,17,21,18,24,23,21,21,20,23,20,22,24,20,20,19,19,18,24,27,26,18,24,26,21,23,17,23,20,23,18,23,25,20,19,16,21,20,18,23,20,19,20,24,23,21,23,19,22,22,21,23,20,24,24,15,26,15,22,26,23,20,21,27,19,28,25,22,24,22],"fc":[23.2,23.2,23.2,23.2,23.2,23.2,23.2,23.2,23.2,23.2,23.2,23.2]},{"sku":"NB-0046","name":"Indicator Tape","cat":"Sterilization","sup":"S03","abc":"C","xyz":"X","status":"Healthy","onHand":50,"onOrder":17,"pos":67,"ss":5.0,"rop":29.0,"eoq":45.0,"orderQty":0.0,"d":3.97,"lt":5.85,"cost":79.4,"spend":16515.2,"cover":12.6,"method":"Seasonal Exp. Smoothing","wape":0.196,"hist":[4,6,6,5,4,5,5,4,4,3,5,6,4,3,5,4,4,5,5,4,4,4,4,4,4,5,4,3,5,2,4,4,4,5,5,4,5,4,3,6,3,5,5,5,4,5,3,4,4,4,5,5,4,5,4,4,4,4,4,5,4,3,3,5,4,4,5,3,3,5,4,4,4,4,3,5,4,5,4,3,4,2,4,4,5,3,5,5,5,4,5,3,5,4,3,3,4,4,4,3,3,5,5,3],"fc":[4.3,4.1,4.1,4.2,4.0,4.0,3.9,3.8,3.7,3.9,3.9,3.8]},{"sku":"NB-0037","name":"Incontinence Brief L","cat":"Patient Care","sup":"S07","abc":"C","xyz":"Y","status":"Healthy","onHand":322,"onOrder":80,"pos":402,"ss":63.0,"rop":303.0,"eoq":283.0,"orderQty":0.0,"d":28.75,"lt":8.32,"cost":14.48,"spend":15797.68,"cover":11.2,"method":"Moving Average (4w)","wape":0.23,"hist":[15,26,22,21,23,29,21,19,27,24,18,19,20,20,12,11,14,13,15,21,17,18,12,15,20,20,14,18,27,17,14,17,18,17,18,11,14,18,18,16,19,20,25,20,23,18,24,24,27,26,25,21,24,28,18,19,23,25,17,22,21,9,20,20,20,29,14,16,6,18,18,17,25,24,20,17,24,19,15,10,17,23,31,20,16,14,23,11,24,26,24,20,25,23,18,34,21,28,8,32,34,25,28,28],"fc":[28.8,28.8,28.8,28.8,28.8,28.8,28.8,28.8,28.8,28.8,28.8,28.8]},{"sku":"NB-0039","name":"Bed Bath Wipes","cat":"Patient Care","sup":"S07","abc":"C","xyz":"Y","status":"Healthy","onHand":153,"onOrder":0,"pos":153,"ss":29.0,"rop":117.0,"eoq":122.0,"orderQty":0.0,"d":10.46,"lt":8.32,"cost":28.69,"spend":13254.78,"cover":14.6,"method":"Exp. Smoothing","wape":0.266,"hist":[16,13,18,9,18,13,24,6,8,12,12,17,7,13,14,12,6,14,13,10,9,9,8,10,8,5,5,6,9,8,9,9,6,13,7,7,10,3,6,12,3,13,15,8,11,14,8,13,8,8,7,12,15,10,5,6,12,17,12,9,13,9,8,6,14,0,12,7,7,14,6,6,8,9,6,3,5,11,8,9,7,6,12,7,6,11,6,6,8,8,9,15,10,1,10,9,9,10,9,9,12,8,6,21],"fc":[10.5,10.5,10.5,10.5,10.5,10.5,10.5,10.5,10.5,10.5,10.5,10.5]},{"sku":"NB-0043","name":"Mouth Swab","cat":"Patient Care","sup":"S07","abc":"C","xyz":"Y","status":"Order now","onHand":67,"onOrder":0,"pos":67,"ss":23.0,"rop":80.0,"eoq":86.0,"orderQty":99.0,"d":6.75,"lt":8.32,"cost":37.52,"spend":11406.08,"cover":9.9,"method":"Moving Average (4w)","wape":0.506,"hist":[3,3,5,3,0,3,4,4,8,4,6,5,5,3,5,3,5,4,3,6,5,4,5,4,3,5,3,3,2,4,6,3,9,6,7,6,8,4,0,4,6,6,6,8,6,7,4,3,9,6,5,5,5,4,3,3,6,5,9,7,7,4,6,7,7,6,8,6,7,5,2,6,7,7,6,5,4,7,6,4,8,4,4,9,8,5,6,6,0,4,6,5,7,9,6,4,8,6,7,6,13,1,6,7],"fc":[6.8,6.8,6.8,6.8,6.8,6.8,6.8,6.8,6.8,6.8,6.8,6.8]},{"sku":"NB-0040","name":"Denture Cup","cat":"Patient Care","sup":"S04","abc":"C","xyz":"X","status":"Healthy","onHand":144,"onOrder":0,"pos":144,"ss":27.0,"rop":116.0,"eoq":338.0,"orderQty":0.0,"d":22.24,"lt":4.0,"cost":7.85,"spend":7904.95,"cover":6.5,"method":"Seasonal Exp. Smoothing","wape":0.211,"hist":[16,19,13,19,15,17,22,20,20,12,24,13,22,20,18,14,17,14,16,15,9,18,15,14,13,16,12,8,16,16,15,12,16,11,13,14,19,16,16,24,19,19,17,17,11,23,21,19,20,23,14,18,16,28,24,12,15,20,19,15,28,21,22,17,22,18,18,21,13,24,19,22,14,14,13,18,17,15,14,13,17,16,15,23,17,22,16,19,19,13,25,19,23,18,20,18,27,23,24,29,28,27,17,20],"fc":[21.1,21.7,21.4,21.9,21.0,20.8,22.6,23.0,24.1,22.7,23.8,22.7]},{"sku":"NB-0012","name":"Foam Dressing 10cm","cat":"Wound Care","sup":"S02","abc":"C","xyz":"Y","status":"Order now","onHand":23,"onOrder":0,"pos":23,"ss":7.0,"rop":25.0,"eoq":88.0,"orderQty":90.0,"d":6.0,"lt":2.85,"cost":31.44,"spend":6350.88,"cover":3.8,"method":"Moving Average (4w)","wape":0.364,"hist":[4,4,3,6,2,5,5,2,6,5,5,4,3,3,4,5,4,2,4,5,4,4,3,2,2,1,4,3,3,0,2,5,3,4,2,5,3,4,7,6,3,3,3,5,4,3,6,4,7,4,7,5,5,3,3,5,6,4,2,2,2,1,4,6,4,1,4,4,7,2,3,6,5,5,4,4,5,3,5,2,4,4,3,4,3,2,4,2,5,2,5,2,3,3,6,5,4,5,1,4,8,5,5,6],"fc":[6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0]}],"suppliers":[{"id":"S08","name":"Shenzhen Diagnostics Co","country":"China","score":76.5,"tier":"High","otd":0.683,"lt":10.85,"ltcv":0.153,"defect":0.024,"share":0.092,"driver":"late delivery","action":"Priority: Quarterly business review with OTD target; add late-delivery clause to contract","skus":4},{"id":"S06","name":"Chennai Healthcare Exports","country":"India","score":62.2,"tier":"High","otd":0.723,"lt":9.45,"ltcv":0.122,"defect":0.021,"share":0.051,"driver":"late delivery","action":"Priority: Quarterly business review with OTD target; add late-delivery clause to contract","skus":5},{"id":"S07","name":"Saigon Textile Medical","country":"Vietnam","score":56.3,"tier":"Medium","otd":0.791,"lt":8.32,"ltcv":0.133,"defect":0.018,"share":0.071,"driver":"late delivery","action":"Quarterly business review with OTD target; add late-delivery clause to contract","skus":9},{"id":"S05","name":"Penang Glove Industries","country":"Malaysia","score":54.9,"tier":"Medium","otd":0.692,"lt":8.47,"ltcv":0.123,"defect":0.015,"share":0.023,"driver":"late delivery","action":"Quarterly business review with OTD target; add late-delivery clause to contract","skus":1},{"id":"S04","name":"Monterrey Surgical SA","country":"Mexico","score":44.2,"tier":"Medium","otd":0.808,"lt":4.0,"ltcv":0.128,"defect":0.012,"share":0.04,"driver":"late delivery","action":"Quarterly business review with OTD target; add late-delivery clause to contract","skus":6},{"id":"S02","name":"Great Lakes Health Products","country":"USA","score":33.2,"tier":"Low","otd":0.942,"lt":2.85,"ltcv":0.081,"defect":0.006,"share":0.279,"driver":"spend dependency","action":"Reliable, but holds a large share of spend: keep as primary and qualify a backup supplier for its A-class SKUs","skus":12},{"id":"S03","name":"Rhein MedTech GmbH","country":"Germany","score":29.8,"tier":"Low","otd":0.934,"lt":5.85,"ltcv":0.05,"defect":0.003,"share":0.411,"driver":"spend dependency","action":"Reliable, but holds a large share of spend: keep as primary and qualify a backup supplier for its A-class SKUs","skus":7},{"id":"S01","name":"Maple Leaf Medical Mfg","country":"Canada","score":13.2,"tier":"Low","otd":0.977,"lt":1.82,"ltcv":0.099,"defect":0.004,"share":0.034,"driver":"lead time variability","action":"Maintain; candidate for volume consolidation / preferred-supplier status","skus":5}],"matrix":{"A":{"X":1,"Y":14,"Z":0},"B":{"X":8,"Y":9,"Z":2},"C":{"X":8,"Y":7,"Z":0}},"strategy":{"AX":"Tight control, frequent review, low safety stock, consider VMI/automation","AY":"Weekly review, forecast-driven replenishment, moderate safety stock","AZ":"Highest attention: collaborate with customers, dual-source, buffer stock","BX":"Automated reorder point, periodic review","BY":"Standard reorder point policy, monthly review","BZ":"Higher safety stock or make-to-order where possible","CX":"Automate fully, order in larger batches","CY":"Automate, larger batches, low review effort","CZ":"Review if SKU is needed; consider dropping or ordering on demand"},"repo":"https://github.com/D2497/supply-chain-inventory-risk-analytics","source":{"mode":"simulated","company":"NorthBridge Medical Supply","company_desc":"a fictional Ontario-based distributor of medical supplies","note":"NorthBridge is a fictional company. The data is simulated because real supply chain data is confidential. The analysis is built to run the same way on a real ERP export."},"landedCountry":[{"country":"Malaysia","region":"Offshore","price":97.0,"freight":9.7,"duty":0.0,"brokerage":1.45,"landed_total":108.16,"avg_lead_time_wks":8.5,"on_time_rate":0.692},{"country":"Vietnam","region":"Offshore","price":102.0,"freight":11.22,"duty":0.0,"brokerage":1.53,"landed_total":114.75,"avg_lead_time_wks":8.3,"on_time_rate":0.791},{"country":"China","region":"Offshore","price":100.0,"freight":10.0,"duty":6.5,"brokerage":1.5,"landed_total":118.0,"avg_lead_time_wks":10.8,"on_time_rate":0.683},{"country":"India","region":"Offshore","price":100.0,"freight":11.0,"duty":6.5,"brokerage":1.5,"landed_total":119.0,"avg_lead_time_wks":9.4,"on_time_rate":0.723},{"country":"Mexico","region":"Nearshore","price":118.0,"freight":5.31,"duty":0.0,"brokerage":1.18,"landed_total":124.49,"avg_lead_time_wks":4.0,"on_time_rate":0.808},{"country":"Germany","region":"Offshore","price":120.0,"freight":8.4,"duty":0.0,"brokerage":1.2,"landed_total":129.6,"avg_lead_time_wks":5.8,"on_time_rate":0.934},{"country":"USA","region":"Nearshore","price":138.0,"freight":4.14,"duty":0.0,"brokerage":1.38,"landed_total":143.52,"avg_lead_time_wks":2.9,"on_time_rate":0.942},{"country":"Canada","region":"Domestic","price":145.0,"freight":2.17,"duty":0.0,"brokerage":0.0,"landed_total":147.17,"avg_lead_time_wks":1.8,"on_time_rate":0.977}],"landed":[{"sku":"NB-0033","product_name":"Hemostat Forceps","current_country":"Germany","nearshore_country":"Mexico","current_lead_time_wks":5.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":118402.28,"saving_pct":0.048,"inventory_released_cad":108063.9,"recommendation":"Nearshore: lower total cost"},{"sku":"NB-0021","product_name":"Glucose Test Strips","current_country":"Germany","nearshore_country":"Mexico","current_lead_time_wks":5.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":8964.46,"saving_pct":0.047,"inventory_released_cad":7719.65,"recommendation":"Nearshore: lower total cost"},{"sku":"NB-0045","product_name":"Sterilization Pouch","current_country":"Germany","nearshore_country":"Mexico","current_lead_time_wks":5.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":3449.2,"saving_pct":0.046,"inventory_released_cad":2728.33,"recommendation":"Nearshore: lower total cost"},{"sku":"NB-0020","product_name":"Rapid Antigen Test Kit","current_country":"Germany","nearshore_country":"Mexico","current_lead_time_wks":5.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":2570.21,"saving_pct":0.047,"inventory_released_cad":2129.76,"recommendation":"Nearshore: lower total cost"},{"sku":"NB-0036","product_name":"IV Start Kit","current_country":"Germany","nearshore_country":"Mexico","current_lead_time_wks":5.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":2399.88,"saving_pct":0.047,"inventory_released_cad":2001.12,"recommendation":"Nearshore: lower total cost"},{"sku":"NB-0047","product_name":"Biological Indicator","current_country":"Germany","nearshore_country":"Mexico","current_lead_time_wks":5.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":2002.8,"saving_pct":0.047,"inventory_released_cad":1756.59,"recommendation":"Nearshore: lower total cost"},{"sku":"NB-0046","product_name":"Indicator Tape","current_country":"Germany","nearshore_country":"Mexico","current_lead_time_wks":5.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":843.76,"saving_pct":0.046,"inventory_released_cad":662.56,"recommendation":"Nearshore: lower total cost"},{"sku":"NB-0032","product_name":"Skin Stapler","current_country":"India","nearshore_country":"Mexico","current_lead_time_wks":9.4,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-626.4,"saving_pct":-0.019,"inventory_released_cad":3890.26,"recommendation":"Nearshore candidate: small premium for resilience"},{"sku":"NB-0013","product_name":"Adhesive Bandage Strip","current_country":"India","nearshore_country":"Mexico","current_lead_time_wks":9.4,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-916.2,"saving_pct":-0.019,"inventory_released_cad":5690.68,"recommendation":"Nearshore candidate: small premium for resilience"},{"sku":"NB-0043","product_name":"Mouth Swab","current_country":"Vietnam","nearshore_country":"Mexico","current_lead_time_wks":8.3,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-942.31,"saving_pct":-0.061,"inventory_released_cad":1432.96,"recommendation":"Keep offshore"},{"sku":"NB-0017","product_name":"Alginate Dressing","current_country":"India","nearshore_country":"Mexico","current_lead_time_wks":9.4,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-1006.72,"saving_pct":-0.018,"inventory_released_cad":6561.97,"recommendation":"Nearshore candidate: small premium for resilience"},{"sku":"NB-0004","product_name":"Surgical Mask Level 2","current_country":"China","nearshore_country":"Mexico","current_lead_time_wks":10.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-1025.63,"saving_pct":-0.018,"inventory_released_cad":8742.73,"recommendation":"Nearshore candidate: small premium for resilience"},{"sku":"NB-0039","product_name":"Bed Bath Wipes","current_country":"Vietnam","nearshore_country":"Mexico","current_lead_time_wks":8.3,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-1124.04,"saving_pct":-0.061,"inventory_released_cad":1664.06,"recommendation":"Keep offshore"},{"sku":"NB-0044","product_name":"Hand Sanitizer 500ml","current_country":"Vietnam","nearshore_country":"Mexico","current_lead_time_wks":8.3,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-1512.68,"saving_pct":-0.061,"inventory_released_cad":2210.92,"recommendation":"Keep offshore"},{"sku":"NB-0037","product_name":"Incontinence Brief L","current_country":"Vietnam","nearshore_country":"Mexico","current_lead_time_wks":8.3,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-1563.97,"saving_pct":-0.061,"inventory_released_cad":2287.12,"recommendation":"Keep offshore"},{"sku":"NB-0038","product_name":"Underpad 30x36","current_country":"Vietnam","nearshore_country":"Mexico","current_lead_time_wks":8.3,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-1588.39,"saving_pct":-0.061,"inventory_released_cad":2383.76,"recommendation":"Keep offshore"},{"sku":"NB-0030","product_name":"Sterile Drape","current_country":"India","nearshore_country":"Mexico","current_lead_time_wks":9.4,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-1825.86,"saving_pct":-0.018,"inventory_released_cad":11373.08,"recommendation":"Nearshore candidate: small premium for resilience"},{"sku":"NB-0034","product_name":"Suction Catheter","current_country":"India","nearshore_country":"Mexico","current_lead_time_wks":9.4,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-2376.29,"saving_pct":-0.017,"inventory_released_cad":17497.07,"recommendation":"Nearshore candidate: small premium for resilience"},{"sku":"NB-0001","product_name":"Nitrile Exam Gloves M","current_country":"China","nearshore_country":"Mexico","current_lead_time_wks":10.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-2783.8,"saving_pct":-0.018,"inventory_released_cad":23520.85,"recommendation":"Nearshore candidate: small premium for resilience"},{"sku":"NB-0022","product_name":"Urine Test Strips","current_country":"China","nearshore_country":"Mexico","current_lead_time_wks":10.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-3109.61,"saving_pct":-0.018,"inventory_released_cad":26217.05,"recommendation":"Nearshore candidate: small premium for resilience"},{"sku":"NB-0002","product_name":"Nitrile Exam Gloves L","current_country":"Vietnam","nearshore_country":"Mexico","current_lead_time_wks":8.3,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-3991.35,"saving_pct":-0.061,"inventory_released_cad":5833.72,"recommendation":"Keep offshore"},{"sku":"NB-0005","product_name":"N95 Respirator","current_country":"Vietnam","nearshore_country":"Mexico","current_lead_time_wks":8.3,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-5379.26,"saving_pct":-0.061,"inventory_released_cad":7865.61,"recommendation":"Keep offshore"},{"sku":"NB-0024","product_name":"Pulse Oximeter","current_country":"China","nearshore_country":"Mexico","current_lead_time_wks":10.8,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-6970.05,"saving_pct":-0.018,"inventory_released_cad":58682.06,"recommendation":"Nearshore candidate: small premium for resilience"},{"sku":"NB-0009","product_name":"Bouffant Cap","current_country":"Vietnam","nearshore_country":"Mexico","current_lead_time_wks":8.3,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-7777.14,"saving_pct":-0.061,"inventory_released_cad":11471.48,"recommendation":"Keep offshore"},{"sku":"NB-0008","product_name":"Shoe Covers","current_country":"Vietnam","nearshore_country":"Mexico","current_lead_time_wks":8.3,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-14000.03,"saving_pct":-0.061,"inventory_released_cad":20740.55,"recommendation":"Keep offshore"},{"sku":"NB-0007","product_name":"Face Shield","current_country":"Malaysia","nearshore_country":"Mexico","current_lead_time_wks":8.5,"nearshore_lead_time_wks":4.0,"annual_saving_cad":-23748.78,"saving_pct":-0.126,"inventory_released_cad":15984.24,"recommendation":"Keep offshore"}],"landedSummary":{"offshore_skus":26,"cheaper_nearshore":7,"nearshore_candidates":16,"saving_if_cheaper_moved":138633.0,"inventory_released_if_moved":287238.0,"avg_lead_time_cut_wks":4.2}};
+
+// ---------- helpers ----------
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, html = "") => { const e = document.createElement(tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (html) e.innerHTML = html; return e; };
+const fmt = (n, d = 0) => Number(n).toLocaleString("en-CA", { maximumFractionDigits: d, minimumFractionDigits: d });
+const money = n => { const a = Math.abs(n); return "CAD " + (a >= 1e6 ? fmt(n / 1e6, 1) + "M" : a >= 1e3 ? fmt(n / 1e3, 0) + "K" : fmt(n, 0)); };
+const pct = (n, d = 0) => fmt(n * 100, d) + "%";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const STATUS = {
+  "Critical - expedite": { c: "var(--critical)", icon: "▲", label: "Critical" },
+  "Order now": { c: "var(--serious)", icon: "●", label: "Order now" },
+  "Healthy": { c: "var(--good)", icon: "✓", label: "Healthy" },
+  "Overstock": { c: "var(--warning)", icon: "◆", label: "Overstock" },
+};
+const TIER = { High: "var(--critical)", Medium: "var(--warning)", Low: "var(--good)" };
+const pill = (color, icon, text) => `<span class="pill"><span class="dot" style="background:${color}"></span>${text}</span>`;
+const supName = Object.fromEntries(DATA.suppliers.map(s => [s.id, s.name]));
+
+// ---------- theme ----------
+$("#theme-btn").onclick = () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+  drawForecast();
+};
+try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+
+// ---------- header + KPIs ----------
+const K = DATA.kpi;
+$("#h-co").textContent = DATA.source.company; $("#h-desc").textContent = DATA.source.company_desc;
+$("#src-note").textContent = DATA.source.note;
+$("#h-skus").textContent = K.skus; $("#h-sups").textContent = K.suppliers;
+$("#svc").textContent = pct(DATA.serviceLevel);
+$("#repo-link").href = DATA.repo;
+const kpis = [
+  ["Annual spend analysed", money(K.spend), `${K.skus} SKUs · ${K.suppliers} suppliers`],
+  ["Spend in A-class SKUs", pct(K.aShare), `from only ${pct(K.aSkuShare)} of SKUs (${K.aCount})`],
+  ["Forecast error (WAPE)", pct(K.wape, 1), (K.wape <= K.wapeNaive ? `<b>${pct(1 - K.wape / K.wapeNaive)} lower</b>` : `${pct(K.wape / K.wapeNaive - 1)} higher`) + ` than naive (${pct(K.wapeNaive, 1)})`],
+  ["EOQ cost saving", money(K.eoqSave), `per year · <b>−${pct(K.eoqPct, 1)}</b> ordering + holding cost`],
+  ["Excess inventory", money(K.excess), `${K.over} SKUs above max stock`],
+  ["Supplier on-time delivery", pct(K.otd, 1), `${K.highRisk} high-risk suppliers flagged`],
+];
+kpis.forEach(([l, v, c]) => $("#kpis").append(el("div", { class: "kpi" }, `<div class="label">${l}</div><div class="value">${v}</div><div class="ctx">${c}</div>`)));
+
+// ---------- reorder table ----------
+const order = { "Critical - expedite": 0, "Order now": 1, "Overstock": 2, "Healthy": 3 };
+let statusFilter = "action";
+const filters = [["action", "Needs action"], ["Critical - expedite", "Critical"], ["Order now", "Order now"], ["Overstock", "Overstock"], ["all", "All SKUs"]];
+filters.forEach(([k, label]) => {
+  const n = k === "action" ? DATA.skus.filter(s => order[s.status] < 2).length : k === "all" ? DATA.skus.length : DATA.skus.filter(s => s.status === k).length;
+  const b = el("button", { class: "chip", type: "button", "aria-pressed": k === statusFilter }, `${label} · ${n}`);
+  b.onclick = () => { statusFilter = k; document.querySelectorAll("#status-filter .chip").forEach(c => c.setAttribute("aria-pressed", c === b)); drawAlerts(); };
+  $("#status-filter").append(b);
+});
+function drawAlerts() {
+  const rows = DATA.skus.filter(s => statusFilter === "all" ? true : statusFilter === "action" ? order[s.status] < 2 : s.status === statusFilter)
+    .sort((a, b) => order[a.status] - order[b.status] || b.spend - a.spend);
+  $("#alerts tbody").innerHTML = rows.map(s => {
+    const st = STATUS[s.status];
+    return `<tr><td>${s.sku}</td><td>${esc(s.name)} <span class="muted">· ${s.abc}${s.xyz}</span><br><span class="muted" style="font-size:12px">${esc(supName[s.sup])}</span></td><td>${pill(st.c, st.icon, st.label)}</td>
+      <td class="num">${fmt(s.pos)}</td><td class="num">${fmt(s.rop)}</td>
+      <td class="num">${s.orderQty ? "<b>" + fmt(s.orderQty) + "</b>" : '<span class="muted">–</span>'}</td></tr>`;
+  }).join("");
+}
+drawAlerts();
+
+// ---------- supplier risk ----------
+let selSup = DATA.suppliers[0].id;
+function drawRisk() {
+  $("#risk-bars").innerHTML = "";
+  DATA.suppliers.forEach(s => {
+    const r = el("div", { class: "bar-row" + (s.id === selSup ? " sel" : ""), role: "button", tabindex: "0", "aria-label": `${s.name}, risk ${fmt(s.score)}, ${s.tier}` },
+      `<div class="bar-name">${esc(s.name)}<br><small>${s.country}</small></div>
+       <div class="track"><div class="fill" style="width:${s.score}%;background:${TIER[s.tier]}"></div></div>
+       <div class="bar-val"><b>${fmt(s.score)}</b><span class="muted">${s.tier}</span></div>`);
+    r.onclick = r.onkeydown = e => { if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return; e.preventDefault?.(); selSup = s.id; drawRisk(); };
+    $("#risk-bars").append(r);
+  });
+  const s = DATA.suppliers.find(x => x.id === selSup);
+  $("#sup-detail").innerHTML = `<b>${esc(s.name)}</b> ${pill(TIER[s.tier], "", s.tier + " risk")}
+    <div class="stats">
+      <div><span>On-time delivery</span><b>${pct(s.otd, 1)}</b></div>
+      <div><span>Avg lead time</span><b>${fmt(s.lt, 1)} wks</b></div>
+      <div><span>Lead-time CV</span><b>${pct(s.ltcv)}</b></div>
+      <div><span>Defect rate</span><b>${pct(s.defect, 2)}</b></div>
+      <div><span>Share of spend</span><b>${pct(s.share, 1)}</b></div>
+    </div>
+    <span class="muted">Main driver: ${s.driver}</span><br><b>Action:</b> ${esc(s.action)}`;
+}
+drawRisk();
+
+// ---------- disruption simulator (same logic as src/scenario.py) ----------
+DATA.suppliers.forEach(s => $("#sim-sup").append(el("option", { value: s.id }, `${esc(s.name)} (${s.country}) · ${s.skus} SKU${s.skus > 1 ? "s" : ""}`)));
+function simulate() {
+  const sup = $("#sim-sup").value, delay = +$("#sim-delay").value;
+  $("#sim-delay-v").textContent = `+${delay} week${delay === 1 ? "" : "s"}`;
+  let out = 0, rev = 0, buf = 0;
+  const rows = DATA.skus.filter(s => s.sup === sup).map(s => {
+    const newLt = s.lt + delay, weeks = s.d > 0 ? (s.onHand + s.onOrder) / s.d : Infinity;
+    const gap = Math.max(0, newLt - weeks), short = Math.ceil(gap * s.d), r = short * s.cost * DATA.markup;
+    if (gap > 0) out++;
+    rev += r; buf += Math.ceil(s.d * delay) * s.cost;
+    return { s, newLt, weeks, gap, short, r };
+  }).sort((a, b) => b.r - a.r || a.weeks - b.weeks);
+  $("#sim-n").textContent = `${out} of ${rows.length}`;
+  $("#sim-rev").textContent = money(rev);
+  $("#sim-buf").textContent = money(buf);
+  $("#sim-table tbody").innerHTML = rows.map(({ s, newLt, weeks, gap, short, r }) => `<tr><td>${s.sku}</td><td>${esc(s.name)}</td>
+    <td class="num">${fmt(weeks, 1)}</td><td class="num">${fmt(newLt, 1)} wks</td>
+    <td>${gap > 0 ? pill("var(--critical)", "", `Stockout ~${fmt(gap, 1)} wks`) : pill("var(--good)", "", "Covered")}</td>
+    <td class="num">${short ? fmt(short) : "–"}</td><td class="num">${r ? money(r) : "–"}</td></tr>`).join("");
+}
+$("#sim-sup").onchange = simulate; $("#sim-delay").oninput = simulate;
+simulate();
+
+// ---------- forecast explorer ----------
+DATA.skus.forEach(s => $("#fc-sku").append(el("option", { value: s.sku }, `${s.sku} · ${esc(s.name)} (${s.abc}${s.xyz})`)));
+const ppe = DATA.skus.find(s => s.cat === "PPE"); if (ppe) $("#fc-sku").value = ppe.sku;
+$("#fc-sku").onchange = drawForecast;
+function weekDate(i) { const d = new Date(DATA.firstWeek + "T00:00:00"); d.setDate(d.getDate() + 7 * i); return d; }
+function drawForecast() {
+  const s = DATA.skus.find(x => x.sku === $("#fc-sku").value);
+  const box = $("#fc-chart"), W = Math.max(box.clientWidth, 280), H = 280, m = { t: 10, r: 12, b: 28, l: 44 };
+  const n = s.hist.length, total = n + s.fc.length;
+  const maxY = Math.max(...s.hist, ...s.fc) * 1.08 || 1;
+  const x = i => m.l + (i / (total - 1)) * (W - m.l - m.r), y = v => H - m.b - (v / maxY) * (H - m.t - m.b);
+  const css = getComputedStyle(document.documentElement);
+  const grid = css.getPropertyValue("--border"), blue = css.getPropertyValue("--accent"), orange = css.getPropertyValue("--series-2"), ink = css.getPropertyValue("--ink");
+  let g = "";
+  const ticks = 4;
+  for (let k = 0; k <= ticks; k++) { const v = maxY / 1.08 * k / ticks, yy = y(v); g += `<line x1="${m.l}" x2="${W - m.r}" y1="${yy}" y2="${yy}" stroke="${grid}" stroke-width="1"/><text x="${m.l - 8}" y="${yy + 4}" text-anchor="end">${fmt(v)}</text>`; }
+  const step = W < 560 ? 26 : 13;
+  for (let i = 0; i < total; i += step) { const d = weekDate(i); g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${d.toLocaleDateString("en-CA", { month: "short", year: "2-digit" })}</text>`; }
+  g += `<rect x="${x(n - 0.5)}" y="${m.t}" width="${x(total - 1) - x(n - 0.5)}" height="${H - m.t - m.b}" fill="${grid}" opacity=".35"/>`;
+  const line = (arr, off) => arr.map((v, i) => `${i ? "L" : "M"}${x(i + off).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  g += `<path d="${line(s.hist, 0)}" fill="none" stroke="${blue}" stroke-width="2" stroke-linejoin="round"/>`;
+  g += `<path d="M${x(n - 1)},${y(s.hist[n - 1])}L${line(s.fc, n).slice(1)}" fill="none" stroke="${orange}" stroke-width="2" stroke-dasharray="6 4"/>`;
+  g += `<line id="fc-x" y1="${m.t}" y2="${H - m.b}" stroke="${ink}" stroke-width="1" opacity="0"/><circle id="fc-dot" r="5" stroke="${css.getPropertyValue("--surface")}" stroke-width="2" opacity="0"/>`;
+  box.querySelector("svg")?.remove();
+  box.insertAdjacentHTML("beforeend", `<svg width="${W}" height="${H}" role="img" aria-label="Weekly demand and forecast for ${esc(s.name)}">${g}</svg>`);
+  const svg = box.querySelector("svg"), tip = $("#fc-tip");
+  svg.onmousemove = e => {
+    const rect = svg.getBoundingClientRect(), px = e.clientX - rect.left;
+    const i = Math.max(0, Math.min(total - 1, Math.round((px - m.l) / (W - m.l - m.r) * (total - 1))));
+    const isFc = i >= n, v = isFc ? s.fc[i - n] : s.hist[i];
+    svg.querySelector("#fc-x").setAttribute("x1", x(i)); svg.querySelector("#fc-x").setAttribute("x2", x(i)); svg.querySelector("#fc-x").setAttribute("opacity", .35);
+    const dot = svg.querySelector("#fc-dot"); dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(v)); dot.setAttribute("fill", isFc ? orange : blue); dot.setAttribute("opacity", 1);
+    tip.innerHTML = `${weekDate(i).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}<br><b>${fmt(v)}</b> units ${isFc ? "(forecast)" : ""}`;
+    tip.style.opacity = 1; tip.style.left = Math.min(x(i) + 12, W - 140) + "px"; tip.style.top = Math.max(0, y(v) - 50) + "px";
+  };
+  svg.onmouseleave = () => { tip.style.opacity = 0; svg.querySelector("#fc-x").setAttribute("opacity", 0); svg.querySelector("#fc-dot").setAttribute("opacity", 0); };
+  $("#fc-method").innerHTML = `Winning method: <b>${s.method}</b> · test WAPE <b>${pct(s.wape, 1)}</b> · forecast <b>${fmt(s.d, 0)}</b> units/week · supplier lead time ${fmt(s.lt, 1)} wks → reorder point <b>${fmt(s.rop)}</b>, EOQ <b>${fmt(s.eoq)}</b>`;
+}
+drawForecast();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawForecast, 120); });
+
+
+// ---------- landed cost ----------
+(function () {
+  const S = DATA.landedSummary;
+  $("#lc-kpis").innerHTML = `
+    <div><span>Cheaper to source nearshore</span><b>${S.cheaper_nearshore} of ${S.offshore_skus} SKUs</b></div>
+    <div><span>Saving if they move</span><b>${money(S.saving_if_cheaper_moved)}/yr</b></div>
+    <div><span>Inventory freed (${S.nearshore_candidates} candidates)</span><b>${money(S.inventory_released_if_moved)}</b></div>`;
+  const maxT = Math.max(...DATA.landedCountry.map(c => c.landed_total));
+  const parts = [["price", "var(--accent)"], ["freight", "var(--series-2)"], ["duty", "#1baf7a"], ["brokerage", "#eda100"]];
+  $("#lc-bars").innerHTML = DATA.landedCountry.map(c => `<div class="lc-row" title="${c.country}: price ${fmt(c.price, 1)}, freight ${fmt(c.freight, 1)}, duty ${fmt(c.duty, 1)}, brokerage ${fmt(c.brokerage, 1)}">
+      <div>${c.country} <small>${c.avg_lead_time_wks == null ? "" : fmt(c.avg_lead_time_wks, 1) + " wks"}</small></div>
+      <div><div class="stack" style="width:${c.landed_total / maxT * 100}%">${parts.map(([k, col]) => c[k] > 0 ? `<span style="flex:${c[k]} 0 0;background:${col}"></span>` : "").join("")}</div></div>
+      <div class="bar-val"><b>${fmt(c.landed_total)}</b></div></div>`).join("");
+  const REC = { "Nearshore: lower total cost": "var(--good)", "Nearshore candidate: small premium for resilience": "var(--warning)", "Keep offshore": "var(--ink-3)" };
+  const short = { "Nearshore: lower total cost": "Move: cheaper", "Nearshore candidate: small premium for resilience": "Candidate: <3% premium", "Keep offshore": "Keep offshore" };
+  let lcFilter = "all";
+  [["all", "All"], ...Object.keys(REC).map(k => [k, short[k]])].forEach(([k, label]) => {
+    const n = k === "all" ? DATA.landed.length : DATA.landed.filter(x => x.recommendation === k).length;
+    const b = el("button", { class: "chip", type: "button", "aria-pressed": k === lcFilter }, `${label} · ${n}`);
+    b.onclick = () => { lcFilter = k; document.querySelectorAll("#lc-filter .chip").forEach(c => c.setAttribute("aria-pressed", c === b)); draw(); };
+    $("#lc-filter").append(b);
+  });
+  function draw() {
+    $("#lc-table tbody").innerHTML = DATA.landed.filter(x => lcFilter === "all" || x.recommendation === lcFilter).map(x => `<tr>
+      <td>${x.sku}</td><td>${esc(x.product_name)}</td><td>${x.current_country} → ${x.nearshore_country}</td>
+      <td class="num">${fmt(x.current_lead_time_wks, 1)} → ${fmt(x.nearshore_lead_time_wks, 1)}</td>
+      <td class="num">${x.annual_saving_cad >= 0 ? money(x.annual_saving_cad) : "−" + money(-x.annual_saving_cad)}</td>
+      <td class="num">${money(x.inventory_released_cad)}</td>
+      <td>${pill(REC[x.recommendation], "", short[x.recommendation])}</td></tr>`).join("");
+  }
+  draw();
+})();
+
+// ---------- ABC-XYZ matrix ----------
+let selSeg = DATA.skus[0].abc + DATA.skus[0].xyz;  // segment of the highest-spend SKU
+const maxCell = Math.max(...Object.values(DATA.matrix).flatMap(o => Object.values(o)));
+function drawMatrix() {
+  const m = $("#matrix"); m.innerHTML = "<div></div>";
+  [["X", "X stable"], ["Y", "Y variable"], ["Z", "Z erratic"]].forEach(([, l]) => m.append(el("div", { class: "hd" }, l)));
+  [["A", "A high $"], ["B", "B"], ["C", "C low $"]].forEach(([a, l]) => {
+    m.append(el("div", { class: "hd" }, l));
+    "XYZ".split("").forEach(x => {
+      const v = DATA.matrix[a][x], step = Math.round(v / maxCell * 6), seg = a + x;
+      const c = el("div", { class: "cell" + (seg === selSeg ? " sel" : ""), role: "button", tabindex: "0", style: `background:var(--seq${step});color:${step >= 4 ? "#fff" : "var(--ink)"}` }, `<span>${seg}</span><b>${v}</b>`);
+      c.onclick = c.onkeydown = e => { if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return; selSeg = seg; drawMatrix(); };
+      m.append(c);
+    });
+  });
+  const skus = DATA.skus.filter(s => s.abc + s.xyz === selSeg).map(s => esc(s.name));
+  $("#seg-detail").innerHTML = `<b>${selSeg}</b>: ${esc(DATA.strategy[selSeg])}<br><span class="muted">${skus.length ? skus.slice(0, 6).join(", ") + (skus.length > 6 ? ` +${skus.length - 6} more` : "") : "No SKUs"}</span>`;
+}
+drawMatrix();
+</script>
+</body>
+</html>

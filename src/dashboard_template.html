@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supply Chain Control Tower</title>
+<meta name="description" content="Inventory optimization, demand forecasting and supplier risk analytics. Built with Python, SQL and Excel.">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f4f4f1;--surface:#fcfcfb;--surface-2:#f0efea;--border:#e1e0d9;
+  --ink:#0b0b0b;--ink-2:#52514e;--ink-3:#7a7974;
+  --accent:#2a78d6;--accent-ink:#1d5aa6;--series-2:#eb6834;
+  --good:#0ca30c;--warning:#fab219;--serious:#ec835a;--critical:#d03b3b;
+  --good-ink:#006300;--crit-ink:#b02a2a;
+  --seq0:#eef5fd;--seq1:#c6dcf6;--seq2:#8fbaec;--seq3:#4f92de;--seq4:#2a78d6;--seq5:#1d5aa6;--seq6:#123d73;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121211;--surface:#1a1a19;--surface-2:#232321;--border:#2c2c2a;
+    --ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#8f8e86;
+    --accent:#3987e5;--accent-ink:#8fbaec;--series-2:#d95926;
+    --good-ink:#0ca30c;--crit-ink:#e66767;
+    --seq0:#1d2a3a;--seq1:#1f3b5e;--seq2:#22508a;--seq3:#2a65b0;--seq4:#3987e5;--seq5:#6aa6ec;--seq6:#a9cdf4;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121211;--surface:#1a1a19;--surface-2:#232321;--border:#2c2c2a;
+  --ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#8f8e86;
+  --accent:#3987e5;--accent-ink:#8fbaec;--series-2:#d95926;
+  --good-ink:#0ca30c;--crit-ink:#e66767;
+  --seq0:#1d2a3a;--seq1:#1f3b5e;--seq2:#22508a;--seq3:#2a65b0;--seq4:#3987e5;--seq5:#6aa6ec;--seq6:#a9cdf4;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:28px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);font-weight:600;margin:0 0 4px}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.15;margin:0;letter-spacing:-.01em}
+.sub{color:var(--ink-2);margin:6px 0 0;max-width:720px}
+.links{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--ink);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.note{font-size:13px;color:var(--ink-2);background:var(--surface-2);border-radius:8px;padding:8px 12px;margin:0 0 20px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.kpi .label{font-size:13px;color:var(--ink-2)}
+.kpi .value{font-size:26px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:2px 0}
+.kpi .ctx{font-size:12.5px;color:var(--ink-3)}
+.kpi .ctx b{color:var(--good-ink);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.span-7{grid-column:span 7}.span-5{grid-column:span 5}.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-4{grid-column:span 4}
+@media (max-width:900px){.span-7,.span-5,.span-8,.span-4{grid-column:span 12}}
+.card h2{font-size:17px;margin:0;letter-spacing:-.005em}
+.card .desc{font-size:13.5px;color:var(--ink-2);margin:4px 0 14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+select,input[type=range]{font:inherit}
+select{background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:8px;padding:7px 10px;max-width:100%}
+.table-wrap{overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface-2);font-weight:600;color:var(--ink-2);font-size:12.5px;z-index:1}
+td.num,th.num{text-align:right}
+tbody tr:hover{background:var(--surface-2)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--ink)}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.muted{color:var(--ink-3)}
+svg text{fill:var(--ink-2);font-size:12px;font-family:inherit}
+.bars .bar-row{display:grid;grid-template-columns:minmax(120px,190px) 1fr 82px;gap:10px;align-items:center;padding:6px 4px;border-radius:6px;cursor:pointer}
+.bars .bar-row:hover,.bars .bar-row.sel{background:var(--surface-2)}
+.bar-name{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-name small{color:var(--ink-3)}
+.track{height:14px;background:var(--surface-2);border-radius:4px;position:relative}
+.fill{height:100%;border-radius:0 4px 4px 0}
+@media (max-width:560px){.bars .bar-row{grid-template-columns:1fr 82px;row-gap:4px}.bars .track{grid-column:1/-1;grid-row:2}}
+.bar-val{font-size:13px;font-variant-numeric:tabular-nums;display:flex;gap:6px;align-items:center}
+.detail{margin-top:12px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:13.5px}
+.detail .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:8px 0}
+.detail .stats div span{display:block;font-size:12px;color:var(--ink-3)}
+.detail .stats div b{font-variant-numeric:tabular-nums}
+.sim-out{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+@media (max-width:520px){.sim-out{grid-template-columns:1fr}}
+.sim-out div{background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.sim-out span{font-size:12px;color:var(--ink-2);display:block}
+.sim-out b{font-size:22px;font-variant-numeric:tabular-nums}
+.slider{display:flex;align-items:center;gap:10px;flex:1;min-width:200px}
+.slider input{flex:1;accent-color:var(--accent)}
+.matrix{display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;font-size:13px}
+.matrix .cell{border-radius:6px;padding:12px 6px;text-align:center;cursor:pointer;border:2px solid transparent;min-height:62px;display:flex;flex-direction:column;justify-content:center}
+.matrix .cell.sel{border-color:var(--ink)}
+.matrix .cell b{font-size:18px}
+.matrix .hd{color:var(--ink-2);display:flex;align-items:center;justify-content:center;padding:4px;font-size:12.5px;text-align:center}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px}
+.chart{position:relative}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--surface);font-size:12.5px;padding:6px 9px;border-radius:6px;white-space:nowrap;opacity:0;transition:opacity .1s;z-index:5}
+.method{font-size:13px;color:var(--ink-2);margin-top:6px}
+.formulas{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;font-size:13.5px}
+.formulas div{background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.formulas code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--ink)}
+footer{margin-top:24px;font-size:13px;color:var(--ink-3);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+footer a{color:var(--accent-ink)}
+.stack{display:flex;height:16px;border-radius:0 4px 4px 0;overflow:hidden;gap:2px}
+.stack span{display:block;height:100%}
+.lc-row{display:grid;grid-template-columns:92px minmax(0,1fr) 36px;gap:10px;align-items:center;padding:5px 0;font-size:13px}
+.lc-row small{color:var(--ink-3)}
+.keyrow{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin-bottom:8px}
+.keyrow i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.lc-grid{display:grid;grid-template-columns:minmax(300px,5fr) 7fr;gap:24px}
+.lc-grid>div{min-width:0}
+.lc-row>div{min-width:0}
+.lc-row small{display:block}
+@media (max-width:900px){.lc-grid{grid-template-columns:1fr}}
+.footer-note{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Supply chain analytics · Python · SQL · Excel</p>
+      <h1>Supply Chain Control Tower</h1>
+      <p class="sub">Inventory optimization, demand forecasting and supplier risk for <b id="h-co"></b>, <span id="h-desc"></span>, with <span id="h-skus"></span> SKUs and <span id="h-sups"></span> global suppliers.</p>
+    </div>
+    <div class="links">
+      <a class="btn primary" id="repo-link" href="#">View code on GitHub</a>
+      <button class="btn" id="theme-btn" type="button" aria-label="Toggle dark mode">◐ Theme</button>
+    </div>
+  </header>
+  <p class="note" id="src-note"></p>
+
+  <section class="kpis" id="kpis" aria-label="Key results"></section>
+
+  <div class="grid">
+    <section class="card span-7">
+      <h2>What to order today</h2>
+      <p class="desc">Inventory position (on hand + on order) compared with each SKU's safety stock and reorder point, at a <span id="svc"></span> service level.</p>
+      <div class="row" id="status-filter" role="group" aria-label="Filter by status"></div>
+      <div class="table-wrap"><table id="alerts"><thead><tr>
+        <th>SKU</th><th>Product · supplier</th><th>Status</th><th class="num">Position</th><th class="num">Reorder pt</th><th class="num">Order qty</th>
+      </tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="card span-5">
+      <h2>Supplier risk score</h2>
+      <p class="desc">Weighted score from on-time delivery, lead-time variability, defects, country risk and spend share. Click a supplier for details.</p>
+      <div class="bars" id="risk-bars"></div>
+      <div class="detail" id="sup-detail" aria-live="polite"></div>
+    </section>
+
+    <section class="card span-12">
+      <h2>Disruption simulator</h2>
+      <p class="desc">What happens if a supplier is delayed (port strike, tariff hold, factory shutdown)? Pick a supplier and a delay to see which SKUs run out.</p>
+      <div class="row">
+        <label for="sim-sup" class="sr">Supplier</label>
+        <select id="sim-sup"></select>
+        <div class="slider"><label for="sim-delay">Extra delay</label><input type="range" id="sim-delay" min="0" max="12" step="1" value="4"><b id="sim-delay-v" style="min-width:70px"></b></div>
+      </div>
+      <div class="sim-out">
+        <div><span>SKUs that stock out</span><b id="sim-n"></b></div>
+        <div><span>Revenue at risk</span><b id="sim-rev"></b></div>
+        <div><span>Extra buffer stock to prevent it</span><b id="sim-buf"></b></div>
+      </div>
+      <div class="table-wrap" style="max-height:300px"><table id="sim-table"><thead><tr>
+        <th>SKU</th><th>Product</th><th class="num">Weeks of stock</th><th class="num">New lead time</th><th>Outcome</th><th class="num">Units short</th><th class="num">Revenue at risk</th>
+      </tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="card span-8">
+      <h2>Demand forecast explorer</h2>
+      <p class="desc">Five methods compete for each SKU. The winner is picked on a validation window and graded on the last 12 weeks, which it never saw.</p>
+      <div class="row"><label for="fc-sku" class="sr">SKU</label><select id="fc-sku"></select></div>
+      <div class="legend"><span><i style="border-color:var(--accent)"></i>Actual weekly demand</span><span><i style="border-color:var(--series-2);border-top-style:dashed"></i>12-week forecast</span></div>
+      <div class="chart" id="fc-chart"><div class="tip" id="fc-tip"></div></div>
+      <p class="method" id="fc-method"></p>
+    </section>
+
+    <section class="card span-4">
+      <h2>ABC-XYZ segmentation</h2>
+      <p class="desc">ABC = share of spend. XYZ = how predictable demand is. Click a cell for its stocking strategy.</p>
+      <div class="matrix" id="matrix"></div>
+      <div class="detail" id="seg-detail" aria-live="polite"></div>
+    </section>
+
+    <section class="card span-12">
+      <h2>Logistics &amp; landed cost: offshore vs nearshore</h2>
+      <p class="desc">The real cost of an item once it lands in the warehouse: price, freight, duty and brokerage, plus the cost of the safety stock and in-transit inventory that a long lead time needs.</p>
+      <div class="sim-out" id="lc-kpis"></div>
+      <div class="lc-grid">
+        <div>
+          <div class="keyrow"><span><i style="background:var(--accent)"></i>Price</span><span><i style="background:var(--series-2)"></i>Freight</span><span><i style="background:#1baf7a"></i>Duty</span><span><i style="background:#eda100"></i>Brokerage</span></div>
+          <div id="lc-bars"></div>
+          <p class="footer-note">Cost to land CAD 100 of product (China price level). Lead time measured from purchase orders. Duty rates are illustrative.</p>
+        </div>
+        <div>
+          <div class="row" id="lc-filter" role="group" aria-label="Filter by recommendation"></div>
+          <div class="table-wrap" style="max-height:330px"><table id="lc-table"><thead><tr>
+            <th>SKU</th><th>Product</th><th>Now → nearshore</th><th class="num">Lead time</th><th class="num">Saving/yr</th><th class="num">Inventory freed</th><th>Recommendation</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card span-12">
+      <h2>How it's calculated</h2>
+      <div class="formulas">
+        <div><b>Safety stock</b><br><code>z × √(LT·σd² + d²·σLT²)</code><br><span class="muted">Covers both demand and lead-time uncertainty. σd = forecast error.</span></div>
+        <div><b>Reorder point</b><br><code>d × LT + safety stock</code><br><span class="muted">Order when inventory position falls to this level.</span></div>
+        <div><b>Economic order quantity</b><br><code>√(2·D·S / H)</code><br><span class="muted">Balances ordering cost against holding cost.</span></div>
+        <div><b>Total landed cost</b><br><code>units × price × (1 + freight + duty + brokerage) + (SS + in-transit) × unit × holding %</code><br><span class="muted">Compares offshore and nearshore sources on total cost, not just price.</span></div>
+        <div><b>Forecast accuracy (WAPE)</b><br><code>Σ|actual − forecast| / Σ actual</code><br><span class="muted">Works when a week has zero sales, unlike MAPE.</span></div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <span>Built by <b>Dhruvilkumar Upadhyay</b> · Master Certificate in Global Supply Chain Management, Michigan State University</span>
+    <span>Generated by <code>python src/main.py</code></span>
+  </footer>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+// ---------- helpers ----------
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, html = "") => { const e = document.createElement(tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (html) e.innerHTML = html; return e; };
+const fmt = (n, d = 0) => Number(n).toLocaleString("en-CA", { maximumFractionDigits: d, minimumFractionDigits: d });
+const money = n => { const a = Math.abs(n); return "CAD " + (a >= 1e6 ? fmt(n / 1e6, 1) + "M" : a >= 1e3 ? fmt(n / 1e3, 0) + "K" : fmt(n, 0)); };
+const pct = (n, d = 0) => fmt(n * 100, d) + "%";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const STATUS = {
+  "Critical - expedite": { c: "var(--critical)", icon: "▲", label: "Critical" },
+  "Order now": { c: "var(--serious)", icon: "●", label: "Order now" },
+  "Healthy": { c: "var(--good)", icon: "✓", label: "Healthy" },
+  "Overstock": { c: "var(--warning)", icon: "◆", label: "Overstock" },
+};
+const TIER = { High: "var(--critical)", Medium: "var(--warning)", Low: "var(--good)" };
+const pill = (color, icon, text) => `<span class="pill"><span class="dot" style="background:${color}"></span>${text}</span>`;
+const supName = Object.fromEntries(DATA.suppliers.map(s => [s.id, s.name]));
+
+// ---------- theme ----------
+$("#theme-btn").onclick = () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+  drawForecast();
+};
+try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+
+// ---------- header + KPIs ----------
+const K = DATA.kpi;
+$("#h-co").textContent = DATA.source.company; $("#h-desc").textContent = DATA.source.company_desc;
+$("#src-note").textContent = DATA.source.note;
+$("#h-skus").textContent = K.skus; $("#h-sups").textContent = K.suppliers;
+$("#svc").textContent = pct(DATA.serviceLevel);
+$("#repo-link").href = DATA.repo;
+const kpis = [
+  ["Annual spend analysed", money(K.spend), `${K.skus} SKUs · ${K.suppliers} suppliers`],
+  ["Spend in A-class SKUs", pct(K.aShare), `from only ${pct(K.aSkuShare)} of SKUs (${K.aCount})`],
+  ["Forecast error (WAPE)", pct(K.wape, 1), (K.wape <= K.wapeNaive ? `<b>${pct(1 - K.wape / K.wapeNaive)} lower</b>` : `${pct(K.wape / K.wapeNaive - 1)} higher`) + ` than naive (${pct(K.wapeNaive, 1)})`],
+  ["EOQ cost saving", money(K.eoqSave), `per year · <b>−${pct(K.eoqPct, 1)}</b> ordering + holding cost`],
+  ["Excess inventory", money(K.excess), `${K.over} SKUs above max stock`],
+  ["Supplier on-time delivery", pct(K.otd, 1), `${K.highRisk} high-risk suppliers flagged`],
+];
+kpis.forEach(([l, v, c]) => $("#kpis").append(el("div", { class: "kpi" }, `<div class="label">${l}</div><div class="value">${v}</div><div class="ctx">${c}</div>`)));
+
+// ---------- reorder table ----------
+const order = { "Critical - expedite": 0, "Order now": 1, "Overstock": 2, "Healthy": 3 };
+let statusFilter = "action";
+const filters = [["action", "Needs action"], ["Critical - expedite", "Critical"], ["Order now", "Order now"], ["Overstock", "Overstock"], ["all", "All SKUs"]];
+filters.forEach(([k, label]) => {
+  const n = k === "action" ? DATA.skus.filter(s => order[s.status] < 2).length : k === "all" ? DATA.skus.length : DATA.skus.filter(s => s.status === k).length;
+  const b = el("button", { class: "chip", type: "button", "aria-pressed": k === statusFilter }, `${label} · ${n}`);
+  b.onclick = () => { statusFilter = k; document.querySelectorAll("#status-filter .chip").forEach(c => c.setAttribute("aria-pressed", c === b)); drawAlerts(); };
+  $("#status-filter").append(b);
+});
+function drawAlerts() {
+  const rows = DATA.skus.filter(s => statusFilter === "all" ? true : statusFilter === "action" ? order[s.status] < 2 : s.status === statusFilter)
+    .sort((a, b) => order[a.status] - order[b.status] || b.spend - a.spend);
+  $("#alerts tbody").innerHTML = rows.map(s => {
+    const st = STATUS[s.status];
+    return `<tr><td>${s.sku}</td><td>${esc(s.name)} <span class="muted">· ${s.abc}${s.xyz}</span><br><span class="muted" style="font-size:12px">${esc(supName[s.sup])}</span></td><td>${pill(st.c, st.icon, st.label)}</td>
+      <td class="num">${fmt(s.pos)}</td><td class="num">${fmt(s.rop)}</td>
+      <td class="num">${s.orderQty ? "<b>" + fmt(s.orderQty) + "</b>" : '<span class="muted">–</span>'}</td></tr>`;
+  }).join("");
+}
+drawAlerts();
+
+// ---------- supplier risk ----------
+let selSup = DATA.suppliers[0].id;
+function drawRisk() {
+  $("#risk-bars").innerHTML = "";
+  DATA.suppliers.forEach(s => {
+    const r = el("div", { class: "bar-row" + (s.id === selSup ? " sel" : ""), role: "button", tabindex: "0", "aria-label": `${s.name}, risk ${fmt(s.score)}, ${s.tier}` },
+      `<div class="bar-name">${esc(s.name)}<br><small>${s.country}</small></div>
+       <div class="track"><div class="fill" style="width:${s.score}%;background:${TIER[s.tier]}"></div></div>
+       <div class="bar-val"><b>${fmt(s.score)}</b><span class="muted">${s.tier}</span></div>`);
+    r.onclick = r.onkeydown = e => { if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return; e.preventDefault?.(); selSup = s.id; drawRisk(); };
+    $("#risk-bars").append(r);
+  });
+  const s = DATA.suppliers.find(x => x.id === selSup);
+  $("#sup-detail").innerHTML = `<b>${esc(s.name)}</b> ${pill(TIER[s.tier], "", s.tier + " risk")}
+    <div class="stats">
+      <div><span>On-time delivery</span><b>${pct(s.otd, 1)}</b></div>
+      <div><span>Avg lead time</span><b>${fmt(s.lt, 1)} wks</b></div>
+      <div><span>Lead-time CV</span><b>${pct(s.ltcv)}</b></div>
+      <div><span>Defect rate</span><b>${pct(s.defect, 2)}</b></div>
+      <div><span>Share of spend</span><b>${pct(s.share, 1)}</b></div>
+    </div>
+    <span class="muted">Main driver: ${s.driver}</span><br><b>Action:</b> ${esc(s.action)}`;
+}
+drawRisk();
+
+// ---------- disruption simulator (same logic as src/scenario.py) ----------
+DATA.suppliers.forEach(s => $("#sim-sup").append(el("option", { value: s.id }, `${esc(s.name)} (${s.country}) · ${s.skus} SKU${s.skus > 1 ? "s" : ""}`)));
+function simulate() {
+  const sup = $("#sim-sup").value, delay = +$("#sim-delay").value;
+  $("#sim-delay-v").textContent = `+${delay} week${delay === 1 ? "" : "s"}`;
+  let out = 0, rev = 0, buf = 0;
+  const rows = DATA.skus.filter(s => s.sup === sup).map(s => {
+    const newLt = s.lt + delay, weeks = s.d > 0 ? (s.onHand + s.onOrder) / s.d : Infinity;
+    const gap = Math.max(0, newLt - weeks), short = Math.ceil(gap * s.d), r = short * s.cost * DATA.markup;
+    if (gap > 0) out++;
+    rev += r; buf += Math.ceil(s.d * delay) * s.cost;
+    return { s, newLt, weeks, gap, short, r };
+  }).sort((a, b) => b.r - a.r || a.weeks - b.weeks);
+  $("#sim-n").textContent = `${out} of ${rows.length}`;
+  $("#sim-rev").textContent = money(rev);
+  $("#sim-buf").textContent = money(buf);
+  $("#sim-table tbody").innerHTML = rows.map(({ s, newLt, weeks, gap, short, r }) => `<tr><td>${s.sku}</td><td>${esc(s.name)}</td>
+    <td class="num">${fmt(weeks, 1)}</td><td class="num">${fmt(newLt, 1)} wks</td>
+    <td>${gap > 0 ? pill("var(--critical)", "", `Stockout ~${fmt(gap, 1)} wks`) : pill("var(--good)", "", "Covered")}</td>
+    <td class="num">${short ? fmt(short) : "–"}</td><td class="num">${r ? money(r) : "–"}</td></tr>`).join("");
+}
+$("#sim-sup").onchange = simulate; $("#sim-delay").oninput = simulate;
+simulate();
+
+// ---------- forecast explorer ----------
+DATA.skus.forEach(s => $("#fc-sku").append(el("option", { value: s.sku }, `${s.sku} · ${esc(s.name)} (${s.abc}${s.xyz})`)));
+const ppe = DATA.skus.find(s => s.cat === "PPE"); if (ppe) $("#fc-sku").value = ppe.sku;
+$("#fc-sku").onchange = drawForecast;
+function weekDate(i) { const d = new Date(DATA.firstWeek + "T00:00:00"); d.setDate(d.getDate() + 7 * i); return d; }
+function drawForecast() {
+  const s = DATA.skus.find(x => x.sku === $("#fc-sku").value);
+  const box = $("#fc-chart"), W = Math.max(box.clientWidth, 280), H = 280, m = { t: 10, r: 12, b: 28, l: 44 };
+  const n = s.hist.length, total = n + s.fc.length;
+  const maxY = Math.max(...s.hist, ...s.fc) * 1.08 || 1;
+  const x = i => m.l + (i / (total - 1)) * (W - m.l - m.r), y = v => H - m.b - (v / maxY) * (H - m.t - m.b);
+  const css = getComputedStyle(document.documentElement);
+  const grid = css.getPropertyValue("--border"), blue = css.getPropertyValue("--accent"), orange = css.getPropertyValue("--series-2"), ink = css.getPropertyValue("--ink");
+  let g = "";
+  const ticks = 4;
+  for (let k = 0; k <= ticks; k++) { const v = maxY / 1.08 * k / ticks, yy = y(v); g += `<line x1="${m.l}" x2="${W - m.r}" y1="${yy}" y2="${yy}" stroke="${grid}" stroke-width="1"/><text x="${m.l - 8}" y="${yy + 4}" text-anchor="end">${fmt(v)}</text>`; }
+  const step = W < 560 ? 26 : 13;
+  for (let i = 0; i < total; i += step) { const d = weekDate(i); g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${d.toLocaleDateString("en-CA", { month: "short", year: "2-digit" })}</text>`; }
+  g += `<rect x="${x(n - 0.5)}" y="${m.t}" width="${x(total - 1) - x(n - 0.5)}" height="${H - m.t - m.b}" fill="${grid}" opacity=".35"/>`;
+  const line = (arr, off) => arr.map((v, i) => `${i ? "L" : "M"}${x(i + off).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  g += `<path d="${line(s.hist, 0)}" fill="none" stroke="${blue}" stroke-width="2" stroke-linejoin="round"/>`;
+  g += `<path d="M${x(n - 1)},${y(s.hist[n - 1])}L${line(s.fc, n).slice(1)}" fill="none" stroke="${orange}" stroke-width="2" stroke-dasharray="6 4"/>`;
+  g += `<line id="fc-x" y1="${m.t}" y2="${H - m.b}" stroke="${ink}" stroke-width="1" opacity="0"/><circle id="fc-dot" r="5" stroke="${css.getPropertyValue("--surface")}" stroke-width="2" opacity="0"/>`;
+  box.querySelector("svg")?.remove();
+  box.insertAdjacentHTML("beforeend", `<svg width="${W}" height="${H}" role="img" aria-label="Weekly demand and forecast for ${esc(s.name)}">${g}</svg>`);
+  const svg = box.querySelector("svg"), tip = $("#fc-tip");
+  svg.onmousemove = e => {
+    const rect = svg.getBoundingClientRect(), px = e.clientX - rect.left;
+    const i = Math.max(0, Math.min(total - 1, Math.round((px - m.l) / (W - m.l - m.r) * (total - 1))));
+    const isFc = i >= n, v = isFc ? s.fc[i - n] : s.hist[i];
+    svg.querySelector("#fc-x").setAttribute("x1", x(i)); svg.querySelector("#fc-x").setAttribute("x2", x(i)); svg.querySelector("#fc-x").setAttribute("opacity", .35);
+    const dot = svg.querySelector("#fc-dot"); dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(v)); dot.setAttribute("fill", isFc ? orange : blue); dot.setAttribute("opacity", 1);
+    tip.innerHTML = `${weekDate(i).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}<br><b>${fmt(v)}</b> units ${isFc ? "(forecast)" : ""}`;
+    tip.style.opacity = 1; tip.style.left = Math.min(x(i) + 12, W - 140) + "px"; tip.style.top = Math.max(0, y(v) - 50) + "px";
+  };
+  svg.onmouseleave = () => { tip.style.opacity = 0; svg.querySelector("#fc-x").setAttribute("opacity", 0); svg.querySelector("#fc-dot").setAttribute("opacity", 0); };
+  $("#fc-method").innerHTML = `Winning method: <b>${s.method}</b> · test WAPE <b>${pct(s.wape, 1)}</b> · forecast <b>${fmt(s.d, 0)}</b> units/week · supplier lead time ${fmt(s.lt, 1)} wks → reorder point <b>${fmt(s.rop)}</b>, EOQ <b>${fmt(s.eoq)}</b>`;
+}
+drawForecast();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawForecast, 120); });
+
+
+// ---------- landed cost ----------
+(function () {
+  const S = DATA.landedSummary;
+  $("#lc-kpis").innerHTML = `
+    <div><span>Cheaper to source nearshore</span><b>${S.cheaper_nearshore} of ${S.offshore_skus} SKUs</b></div>
+    <div><span>Saving if they move</span><b>${money(S.saving_if_cheaper_moved)}/yr</b></div>
+    <div><span>Inventory freed (${S.nearshore_candidates} candidates)</span><b>${money(S.inventory_released_if_moved)}</b></div>`;
+  const maxT = Math.max(...DATA.landedCountry.map(c => c.landed_total));
+  const parts = [["price", "var(--accent)"], ["freight", "var(--series-2)"], ["duty", "#1baf7a"], ["brokerage", "#eda100"]];
+  $("#lc-bars").innerHTML = DATA.landedCountry.map(c => `<div class="lc-row" title="${c.country}: price ${fmt(c.price, 1)}, freight ${fmt(c.freight, 1)}, duty ${fmt(c.duty, 1)}, brokerage ${fmt(c.brokerage, 1)}">
+      <div>${c.country} <small>${c.avg_lead_time_wks == null ? "" : fmt(c.avg_lead_time_wks, 1) + " wks"}</small></div>
+      <div><div class="stack" style="width:${c.landed_total / maxT * 100}%">${parts.map(([k, col]) => c[k] > 0 ? `<span style="flex:${c[k]} 0 0;background:${col}"></span>` : "").join("")}</div></div>
+      <div class="bar-val"><b>${fmt(c.landed_total)}</b></div></div>`).join("");
+  const REC = { "Nearshore: lower total cost": "var(--good)", "Nearshore candidate: small premium for resilience": "var(--warning)", "Keep offshore": "var(--ink-3)" };
+  const short = { "Nearshore: lower total cost": "Move: cheaper", "Nearshore candidate: small premium for resilience": "Candidate: <3% premium", "Keep offshore": "Keep offshore" };
+  let lcFilter = "all";
+  [["all", "All"], ...Object.keys(REC).map(k => [k, short[k]])].forEach(([k, label]) => {
+    const n = k === "all" ? DATA.landed.length : DATA.landed.filter(x => x.recommendation === k).length;
+    const b = el("button", { class: "chip", type: "button", "aria-pressed": k === lcFilter }, `${label} · ${n}`);
+    b.onclick = () => { lcFilter = k; document.querySelectorAll("#lc-filter .chip").forEach(c => c.setAttribute("aria-pressed", c === b)); draw(); };
+    $("#lc-filter").append(b);
+  });
+  function draw() {
+    $("#lc-table tbody").innerHTML = DATA.landed.filter(x => lcFilter === "all" || x.recommendation === lcFilter).map(x => `<tr>
+      <td>${x.sku}</td><td>${esc(x.product_name)}</td><td>${x.current_country} → ${x.nearshore_country}</td>
+      <td class="num">${fmt(x.current_lead_time_wks, 1)} → ${fmt(x.nearshore_lead_time_wks, 1)}</td>
+      <td class="num">${x.annual_saving_cad >= 0 ? money(x.annual_saving_cad) : "−" + money(-x.annual_saving_cad)}</td>
+      <td class="num">${money(x.inventory_released_cad)}</td>
+      <td>${pill(REC[x.recommendation], "", short[x.recommendation])}</td></tr>`).join("");
+  }
+  draw();
+})();
+
+// ---------- ABC-XYZ matrix ----------
+let selSeg = DATA.skus[0].abc + DATA.skus[0].xyz;  // segment of the highest-spend SKU
+const maxCell = Math.max(...Object.values(DATA.matrix).flatMap(o => Object.values(o)));
+function drawMatrix() {
+  const m = $("#matrix"); m.innerHTML = "<div></div>";
+  [["X", "X stable"], ["Y", "Y variable"], ["Z", "Z erratic"]].forEach(([, l]) => m.append(el("div", { class: "hd" }, l)));
+  [["A", "A high $"], ["B", "B"], ["C", "C low $"]].forEach(([a, l]) => {
+    m.append(el("div", { class: "hd" }, l));
+    "XYZ".split("").forEach(x => {
+      const v = DATA.matrix[a][x], step = Math.round(v / maxCell * 6), seg = a + x;
+      const c = el("div", { class: "cell" + (seg === selSeg ? " sel" : ""), role: "button", tabindex: "0", style: `background:var(--seq${step});color:${step >= 4 ? "#fff" : "var(--ink)"}` }, `<span>${seg}</span><b>${v}</b>`);
+      c.onclick = c.onkeydown = e => { if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return; selSeg = seg; drawMatrix(); };
+      m.append(c);
+    });
+  });
+  const skus = DATA.skus.filter(s => s.abc + s.xyz === selSeg).map(s => esc(s.name));
+  $("#seg-detail").innerHTML = `<b>${selSeg}</b>: ${esc(DATA.strategy[selSeg])}<br><span class="muted">${skus.length ? skus.slice(0, 6).join(", ") + (skus.length > 6 ? ` +${skus.length - 6} more` : "") : "No SKUs"}</span>`;
+}
+drawMatrix();
+</script>
+</body>
+</html>
