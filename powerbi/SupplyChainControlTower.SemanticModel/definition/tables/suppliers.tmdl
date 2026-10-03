@@ -1,0 +1,60 @@
+table suppliers
+	lineageTag: aafeefee-3917-5de4-923b-dc7df74ed8ac
+
+	column supplier_id
+		dataType: string
+		lineageTag: b04574a9-1b0a-5d78-8506-ed1e4d5e8197
+		summarizeBy: none
+		sourceColumn: supplier_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column supplier_name
+		dataType: string
+		lineageTag: 5363d63a-7ab6-55cc-907f-74be8c12e0ff
+		summarizeBy: none
+		sourceColumn: supplier_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column country
+		dataType: string
+		lineageTag: 88749ae0-b219-501a-a629-9b269b972382
+		summarizeBy: none
+		sourceColumn: country
+
+		annotation SummarizationSetBy = Automatic
+
+	column promised_lead_time_wks
+		dataType: int64
+		formatString: 0
+		lineageTag: 8e24f81d-4f10-54b9-b850-e23be13bbbff
+		summarizeBy: sum
+		sourceColumn: promised_lead_time_wks
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Country Risk' =
+			SWITCH ( suppliers[country],
+			    "Canada", 1, "USA", 2, "Germany", 2, "Mexico", 3,
+			    "Malaysia", 3, "India", 4, "Vietnam", 4, "China", 5,
+			    3 )
+		dataType: int64
+		formatString: 0
+		lineageTag: 2c30ad28-8368-5ab4-a36f-e3adeb427fa3
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition suppliers = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "suppliers.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Headers, {{"supplier_id", type text}, {"supplier_name", type text}, {"country", type text}, {"promised_lead_time_wks", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

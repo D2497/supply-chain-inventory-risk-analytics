@@ -1,0 +1,94 @@
+table landed_cost_by_country
+	lineageTag: 0afa89c4-ab06-55cb-8104-b4ad33d9d6bb
+
+	column country
+		dataType: string
+		lineageTag: 8dbdd4d4-3d13-50bf-af86-cffeae31fa98
+		summarizeBy: none
+		sourceColumn: country
+
+		annotation SummarizationSetBy = Automatic
+
+	column region
+		dataType: string
+		lineageTag: 3e09afea-713e-54d0-a09c-4829db10ac28
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = Automatic
+
+	column price
+		dataType: double
+		formatString: 0.0
+		lineageTag: 2fb732cb-2524-5fd2-93f8-650ec6441333
+		summarizeBy: sum
+		sourceColumn: price
+
+		annotation SummarizationSetBy = Automatic
+
+	column freight
+		dataType: double
+		formatString: 0.0
+		lineageTag: b8808fe7-d6af-51a3-841f-5f722765dece
+		summarizeBy: sum
+		sourceColumn: freight
+
+		annotation SummarizationSetBy = Automatic
+
+	column duty
+		dataType: double
+		formatString: 0.0
+		lineageTag: b0ade0c1-aeea-5a58-912c-13b6aba9faab
+		summarizeBy: sum
+		sourceColumn: duty
+
+		annotation SummarizationSetBy = Automatic
+
+	column brokerage
+		dataType: double
+		formatString: 0.0
+		lineageTag: d1ae1c17-073e-5fa9-b52f-8e31300c4c1b
+		summarizeBy: sum
+		sourceColumn: brokerage
+
+		annotation SummarizationSetBy = Automatic
+
+	column landed_total
+		dataType: double
+		formatString: 0.0
+		lineageTag: 8974dd4b-afd8-5aa6-91d6-d1607cbbec03
+		summarizeBy: sum
+		sourceColumn: landed_total
+
+		annotation SummarizationSetBy = Automatic
+
+	column avg_lead_time_wks
+		dataType: double
+		formatString: 0.0
+		lineageTag: bb287c87-127b-5fd6-9d45-ab9a0f6f1328
+		summarizeBy: sum
+		sourceColumn: avg_lead_time_wks
+
+		annotation SummarizationSetBy = Automatic
+
+	column on_time_rate
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 5f40571f-bf9f-5c48-89a7-f551bdbb5bbe
+		summarizeBy: sum
+		sourceColumn: on_time_rate
+
+		annotation SummarizationSetBy = Automatic
+
+	partition landed_cost_by_country = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "landed_cost_by_country.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Headers, {{"country", type text}, {"region", type text}, {"price", type number}, {"freight", type number}, {"duty", type number}, {"brokerage", type number}, {"landed_total", type number}, {"avg_lead_time_wks", type number}, {"on_time_rate", type number}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

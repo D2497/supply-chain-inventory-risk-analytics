@@ -1,0 +1,31 @@
+table 'Status List'
+	lineageTag: 156effad-0503-5368-91be-f9610c961cfe
+
+	column Status
+		dataType: string
+		lineageTag: 62fe81aa-d7c6-5581-9a45-807fa4c81446
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Status]
+		sortByColumn: Sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sort
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 1416ca56-6bc7-5c94-8dd6-597b440a05fd
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Sort]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Status List' = calculated
+		mode: import
+		source =
+				DATATABLE (
+				    "Status", STRING, "Sort", INTEGER,
+				    { { "Critical - expedite", 1 }, { "Order now", 2 }, { "Healthy", 3 }, { "Overstock", 4 } } )
+

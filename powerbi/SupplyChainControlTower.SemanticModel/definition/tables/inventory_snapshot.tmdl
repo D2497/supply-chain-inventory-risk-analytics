@@ -1,0 +1,41 @@
+table inventory_snapshot
+	lineageTag: 18768e22-0245-55bb-8d4e-219201e4cbda
+
+	column sku
+		dataType: string
+		lineageTag: 4e13f469-24ec-5563-a677-06b71f31b20b
+		summarizeBy: none
+		sourceColumn: sku
+
+		annotation SummarizationSetBy = Automatic
+
+	column on_hand_units
+		dataType: int64
+		formatString: #,0
+		lineageTag: 848f4865-6f57-58bc-835a-2df9567a3b13
+		summarizeBy: sum
+		sourceColumn: on_hand_units
+
+		annotation SummarizationSetBy = Automatic
+
+	column on_order_units
+		dataType: int64
+		formatString: #,0
+		lineageTag: 751fecc9-6a35-5087-a851-6be0f2f7f1c3
+		summarizeBy: sum
+		sourceColumn: on_order_units
+
+		annotation SummarizationSetBy = Automatic
+
+	partition inventory_snapshot = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "inventory_snapshot.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Headers, {{"sku", type text}, {"on_hand_units", Int64.Type}, {"on_order_units", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

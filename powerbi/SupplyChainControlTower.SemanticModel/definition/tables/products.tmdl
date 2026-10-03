@@ -1,0 +1,194 @@
+table products
+	lineageTag: 28533fab-a88a-5336-9085-3625560761f2
+
+	column sku
+		dataType: string
+		lineageTag: 68508865-2f19-5936-aa78-05010bfb1c82
+		summarizeBy: none
+		sourceColumn: sku
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_name
+		dataType: string
+		lineageTag: 116ebd65-9362-524d-b297-8c98250c48fc
+		summarizeBy: none
+		sourceColumn: product_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column category
+		dataType: string
+		lineageTag: f38a62f9-b485-5783-b102-6e95cda39767
+		summarizeBy: none
+		sourceColumn: category
+
+		annotation SummarizationSetBy = Automatic
+
+	column unit_cost_cad
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: 83b3fd1d-c5fe-5aa9-8dff-2994474338ed
+		summarizeBy: sum
+		sourceColumn: unit_cost_cad
+
+		annotation SummarizationSetBy = Automatic
+
+	column supplier_id
+		dataType: string
+		lineageTag: b6187695-0b90-506f-9aac-04f3b8752427
+		summarizeBy: none
+		sourceColumn: supplier_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Avg Weekly Demand' =
+			VAR k = products[sku]
+			VAR lastWk = MAX ( weekly_demand[week_start] )
+			RETURN
+			    AVERAGEX (
+			        FILTER ( weekly_demand, weekly_demand[sku] = k && weekly_demand[week_start] > lastWk - 364 ),
+			        weekly_demand[units] )
+		dataType: double
+		formatString: #,0.0
+		lineageTag: c10e56cb-5da8-5a9a-91cd-eb1ec23a9b6a
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Demand Std' =
+			VAR k = products[sku]
+			VAR lastWk = MAX ( weekly_demand[week_start] )
+			RETURN
+			    STDEVX.S (
+			        FILTER ( weekly_demand, weekly_demand[sku] = k && weekly_demand[week_start] > lastWk - 364 ),
+			        weekly_demand[units] )
+		dataType: double
+		formatString: #,0.0
+		lineageTag: cf4bec80-8f6f-58d9-b897-3ba8b1ba4f81
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Annual Units' = products[Avg Weekly Demand] * 52
+		dataType: double
+		formatString: #,0
+		lineageTag: 4af81e62-ab13-51da-aa2f-5c32c89d0893
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Annual Spend' = products[Annual Units] * products[unit_cost_cad]
+		dataType: double
+		formatString: $#,0
+		lineageTag: a6e165bf-09be-5971-a6ec-61c69b019421
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LT Mean Wks' =
+			VAR s = products[supplier_id]
+			RETURN AVERAGEX ( FILTER ( purchase_orders, purchase_orders[supplier_id] = s ), purchase_orders[Lead Time Wks] )
+		dataType: double
+		formatString: 0.0
+		lineageTag: c6774c15-cf71-5871-a957-71c6c9bcc13c
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'LT Std Wks' =
+			VAR s = products[supplier_id]
+			RETURN STDEVX.S ( FILTER ( purchase_orders, purchase_orders[supplier_id] = s ), purchase_orders[Lead Time Wks] )
+		dataType: double
+		formatString: 0.00
+		lineageTag: 7da2cb80-3f3d-5600-b6c4-a717074ef37d
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'On Hand' = LOOKUPVALUE ( inventory_snapshot[on_hand_units], inventory_snapshot[sku], products[sku] )
+		dataType: int64
+		formatString: #,0
+		lineageTag: 6cb89552-cd4d-5254-b46d-141e9a3bebde
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'On Order' = LOOKUPVALUE ( inventory_snapshot[on_order_units], inventory_snapshot[sku], products[sku] )
+		dataType: int64
+		formatString: #,0
+		lineageTag: af43b05c-ea65-54f9-adc0-bed3f02110a7
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Inventory Position' = products[On Hand] + products[On Order]
+		dataType: int64
+		formatString: #,0
+		lineageTag: a21e3eb2-8920-587b-ac9e-f1cada261c1d
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cum Share Before' =
+			VAR me = products[Annual Spend]
+			RETURN DIVIDE ( SUMX ( FILTER ( products, products[Annual Spend] > me ), products[Annual Spend] ), SUM ( products[Annual Spend] ) )
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 44847a43-8f7a-5902-a954-7b2fff731710
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column ABC = IF ( products[Cum Share Before] < 0.80, "A", IF ( products[Cum Share Before] < 0.95, "B", "C" ) )
+		dataType: string
+		lineageTag: f40a12fa-52ac-54ae-9b71-cf528fe4c44e
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Demand CV' = DIVIDE ( products[Demand Std], products[Avg Weekly Demand] )
+		dataType: double
+		formatString: 0.00
+		lineageTag: 0b072e74-2bc5-5315-95c8-78fbc619aef9
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column XYZ = IF ( products[Demand CV] <= 0.25, "X", IF ( products[Demand CV] <= 0.50, "Y", "Z" ) )
+		dataType: string
+		lineageTag: 77d5fc38-6bdf-5767-b169-731eaf37afcd
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Segment = products[ABC] & products[XYZ]
+		dataType: string
+		lineageTag: c7a6486f-9db6-53a5-818e-acb63cdb2fce
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column EOQ =
+			VAR S = 85
+			VAR H = products[unit_cost_cad] * 0.22
+			RETURN IF ( H > 0, ROUNDUP ( SQRT ( 2 * products[Annual Units] * S / H ), 0 ), 0 )
+		dataType: int64
+		formatString: #,0
+		lineageTag: 340841a2-2847-5122-aa14-698cf58200ff
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition products = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "products.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Headers, {{"sku", type text}, {"product_name", type text}, {"category", type text}, {"unit_cost_cad", type number}, {"supplier_id", type text}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

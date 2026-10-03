@@ -1,0 +1,20 @@
+relationship 1840c787-f70f-5a92-b2f8-deeca592beef
+	fromColumn: weekly_demand.sku
+	toColumn: products.sku
+
+relationship 28603073-cc21-57b1-af15-e405a41c6ab4
+	fromColumn: products.supplier_id
+	toColumn: suppliers.supplier_id
+
+relationship 57649263-9ff0-5722-b493-818bbeb2f9b9
+	fromColumn: purchase_orders.supplier_id
+	toColumn: suppliers.supplier_id
+
+relationship 4839dafb-2354-5bb6-8084-a5c5c4216dbf
+	fromColumn: weekly_demand.week_start
+	toColumn: Dates.Date
+
+relationship a680adca-cd69-5ae5-9039-c07496dd485e
+	fromColumn: landed_cost_by_sku.sku
+	toColumn: products.sku
+

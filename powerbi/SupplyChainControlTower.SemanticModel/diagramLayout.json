@@ -1,0 +1,178 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 1165.6147437545853,
+            "y": 331.725239088275
+          },
+          "nodeIndex": "_Measures",
+          "nodeLineageTag": "2e862414-21ea-5217-a508-867611d53dee",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 340.21408321485842,
+            "y": 47.244104932629625
+          },
+          "nodeIndex": "Dates",
+          "nodeLineageTag": "5cd1f15f-90ab-5c87-a70a-161916ef5fd8",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1449.6147437545853,
+            "y": 369.725239088275
+          },
+          "nodeIndex": "Delay Weeks",
+          "nodeLineageTag": "6626e00a-9a7d-57d4-b4fa-742cdfb58a2c",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1733.6147437545853,
+            "y": 405.725239088275
+          },
+          "nodeIndex": "inventory_snapshot",
+          "nodeLineageTag": "18768e22-0245-55bb-8d4e-219201e4cbda",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2017.6147437545853,
+            "y": 333.725239088275
+          },
+          "nodeIndex": "landed_cost_by_country",
+          "nodeLineageTag": "0afa89c4-ab06-55cb-8104-b4ad33d9d6bb",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 295.05660404110944,
+            "y": 613.45047817655
+          },
+          "nodeIndex": "landed_cost_by_sku",
+          "nodeLineageTag": "fa421f26-e988-5fbe-ad01-3397668fdb2c",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 931.61474375458533,
+            "y": -50
+          },
+          "nodeIndex": "products",
+          "nodeLineageTag": "28533fab-a88a-5336-9085-3625560761f2",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": 249.83175581861212
+          },
+          "nodeIndex": "purchase_orders",
+          "nodeLineageTag": "d79694a4-7241-5894-8dad-32c2321e44d7",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2301.6147437545851,
+            "y": 369.725239088275
+          },
+          "nodeIndex": "Service Level",
+          "nodeLineageTag": "c63049f8-1490-5f52-9377-f686bacec188",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2585.6147437545851,
+            "y": 417.725239088275
+          },
+          "nodeIndex": "Status List",
+          "nodeLineageTag": "156effad-0503-5368-91be-f9610c961cfe",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 641.9737795260271,
+            "y": 244.76056223626233
+          },
+          "nodeIndex": "suppliers",
+          "nodeLineageTag": "aafeefee-3917-5de4-923b-dc7df74ed8ac",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 627.02574229309539,
+            "y": 39.132830494928157
+          },
+          "nodeIndex": "weekly_demand",
+          "nodeLineageTag": "ae60dfa4-4fd1-5e88-9699-b8c902f51500",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

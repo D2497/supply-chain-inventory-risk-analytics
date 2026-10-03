@@ -1,0 +1,30 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["DataFolder","products","suppliers","weekly_demand","purchase_orders","inventory_snapshot","landed_cost_by_sku","landed_cost_by_country"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table products
+ref table suppliers
+ref table weekly_demand
+ref table purchase_orders
+ref table inventory_snapshot
+ref table landed_cost_by_sku
+ref table landed_cost_by_country
+ref table Dates
+ref table 'Status List'
+ref table 'Service Level'
+ref table 'Delay Weeks'
+ref table _Measures
+
+ref cultureInfo en-US
+

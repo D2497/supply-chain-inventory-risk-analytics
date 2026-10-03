@@ -1,0 +1,330 @@
+// =====================================================================
+// Supply Chain Control Tower - Power BI DAX
+// Paste each block into Power BI Desktop as described in powerbi/README.md
+//   CALCULATED COLUMN  -> select the table, Table tools > New column
+//   CALCULATED TABLE   -> Modeling > New table
+//   MEASURE            -> select the _Measures table, Home > New measure
+// Table names match the CSV file names in /data.
+// =====================================================================
+
+
+// ---------------------------------------------------------------------
+// 1. CALCULATED COLUMNS on purchase_orders
+// ---------------------------------------------------------------------
+
+Lead Time Wks = DATEDIFF ( purchase_orders[order_date], purchase_orders[received_date], DAY ) / 7
+
+On Time = IF ( purchase_orders[received_date] <= purchase_orders[promised_date], 1, 0 )
+
+Days Late = MAX ( 0, INT ( purchase_orders[received_date] - purchase_orders[promised_date] ) )
+
+
+// ---------------------------------------------------------------------
+// 2. CALCULATED COLUMNS on suppliers
+// ---------------------------------------------------------------------
+
+Country Risk =
+SWITCH (
+    suppliers[country],
+    "Canada", 1, "USA", 2, "Germany", 2, "Mexico", 3,
+    "Malaysia", 3, "India", 4, "Vietnam", 4, "China", 5,
+    3
+)
+
+
+// ---------------------------------------------------------------------
+// 3. CALCULATED COLUMNS on products  (one row per SKU)
+//    Demand statistics use the last 52 weeks of data.
+// ---------------------------------------------------------------------
+
+Avg Weekly Demand =
+VAR k = products[sku]
+VAR lastWk = MAX ( weekly_demand[week_start] )
+RETURN
+    AVERAGEX (
+        FILTER ( weekly_demand, weekly_demand[sku] = k && weekly_demand[week_start] > lastWk - 364 ),
+        weekly_demand[units]
+    )
+
+Demand Std =
+VAR k = products[sku]
+VAR lastWk = MAX ( weekly_demand[week_start] )
+RETURN
+    STDEVX.S (
+        FILTER ( weekly_demand, weekly_demand[sku] = k && weekly_demand[week_start] > lastWk - 364 ),
+        weekly_demand[units]
+    )
+
+Annual Units = products[Avg Weekly Demand] * 52
+
+Annual Spend = products[Annual Units] * products[unit_cost_cad]
+
+LT Mean Wks =
+VAR s = products[supplier_id]
+RETURN AVERAGEX ( FILTER ( purchase_orders, purchase_orders[supplier_id] = s ), purchase_orders[Lead Time Wks] )
+
+LT Std Wks =
+VAR s = products[supplier_id]
+RETURN STDEVX.S ( FILTER ( purchase_orders, purchase_orders[supplier_id] = s ), purchase_orders[Lead Time Wks] )
+
+On Hand = LOOKUPVALUE ( inventory_snapshot[on_hand_units], inventory_snapshot[sku], products[sku] )
+
+On Order = LOOKUPVALUE ( inventory_snapshot[on_order_units], inventory_snapshot[sku], products[sku] )
+
+Inventory Position = products[On Hand] + products[On Order]
+
+// share of total spend held by SKUs that spend MORE than this one
+Cum Share Before =
+VAR me = products[Annual Spend]
+RETURN DIVIDE ( SUMX ( FILTER ( products, products[Annual Spend] > me ), products[Annual Spend] ), SUM ( products[Annual Spend] ) )
+
+ABC = IF ( products[Cum Share Before] < 0.80, "A", IF ( products[Cum Share Before] < 0.95, "B", "C" ) )
+
+Demand CV = DIVIDE ( products[Demand Std], products[Avg Weekly Demand] )
+
+XYZ = IF ( products[Demand CV] <= 0.25, "X", IF ( products[Demand CV] <= 0.50, "Y", "Z" ) )
+
+Segment = products[ABC] & products[XYZ]
+
+// EOQ = SQRT(2DS/H): S = CAD 85 per order, H = 22% of unit cost per year
+EOQ =
+VAR S = 85
+VAR H = products[unit_cost_cad] * 0.22
+RETURN IF ( H > 0, ROUNDUP ( SQRT ( 2 * products[Annual Units] * S / H ), 0 ), 0 )
+
+
+// ---------------------------------------------------------------------
+// 4. CALCULATED TABLES
+// ---------------------------------------------------------------------
+
+// Date table (mark it as a date table: Table tools > Mark as date table)
+Calendar =
+ADDCOLUMNS (
+    CALENDAR ( MIN ( weekly_demand[week_start] ), MAX ( weekly_demand[week_start] ) + 90 ),
+    "Year", YEAR ( [Date] ),
+    "Month", FORMAT ( [Date], "mmm yyyy" ),
+    "Month Sort", YEAR ( [Date] ) * 100 + MONTH ( [Date] )
+)
+
+// Disconnected table that drives the "SKUs by status" chart
+Status List =
+DATATABLE (
+    "Status", STRING, "Sort", INTEGER,
+    { { "Critical - expedite", 1 }, { "Order now", 2 }, { "Healthy", 3 }, { "Overstock", 4 } }
+)
+
+// Empty table to hold all measures (keeps the field list tidy)
+_Measures = { BLANK () }
+
+// The two What-if parameters are created with Modeling > New parameter
+// (see README). They create these tables + measures automatically:
+//   'Service Level'[Service Level Value]   0.90 to 0.99, step 0.01, default 0.95
+//   'Delay Weeks'[Delay Weeks Value]       0 to 12,      step 1,    default 4
+
+
+// ---------------------------------------------------------------------
+// 5. MEASURES - inventory policy (react to the Service Level slider)
+// ---------------------------------------------------------------------
+
+z Score = NORM.S.INV ( [Service Level Value] )
+
+Safety Stock =
+VAR z = [z Score]
+RETURN
+    SUMX (
+        products,
+        ROUNDUP (
+            z * SQRT ( products[LT Mean Wks] * products[Demand Std] ^ 2
+                     + products[Avg Weekly Demand] ^ 2 * products[LT Std Wks] ^ 2 ),
+            0
+        )
+    )
+
+Reorder Point =
+SUMX ( products, ROUNDUP ( products[Avg Weekly Demand] * products[LT Mean Wks] + [Safety Stock], 0 ) )
+
+Inventory Status =
+IF (
+    HASONEVALUE ( products[sku] ),
+    VAR pos = SELECTEDVALUE ( products[Inventory Position] )
+    VAR ss  = [Safety Stock]
+    VAR rop = [Reorder Point]
+    VAR mx  = rop + SELECTEDVALUE ( products[EOQ] )
+    RETURN
+        SWITCH ( TRUE (),
+            pos < ss,   "Critical - expedite",
+            pos <= rop, "Order now",
+            pos > mx,   "Overstock",
+            "Healthy" )
+)
+
+Suggested Order Qty =
+SUMX (
+    products,
+    VAR st = [Inventory Status]
+    VAR gap = [Reorder Point] + products[EOQ] - products[Inventory Position]
+    RETURN IF ( st IN { "Critical - expedite", "Order now" }, MAX ( products[EOQ], gap ), 0 )
+)
+
+SKUs in Status =
+COUNTROWS ( FILTER ( VALUES ( products[sku] ), [Inventory Status] = SELECTEDVALUE ( 'Status List'[Status] ) ) )
+
+SKUs to Order = COUNTROWS ( FILTER ( VALUES ( products[sku] ), [Inventory Status] IN { "Critical - expedite", "Order now" } ) )
+
+SKUs Critical = COUNTROWS ( FILTER ( VALUES ( products[sku] ), [Inventory Status] = "Critical - expedite" ) )
+
+SKUs Overstocked = COUNTROWS ( FILTER ( VALUES ( products[sku] ), [Inventory Status] = "Overstock" ) )
+
+Excess Inventory Value =
+SUMX (
+    products,
+    VAR mx = [Reorder Point] + products[EOQ]
+    RETURN IF ( products[Inventory Position] > mx, ( products[Inventory Position] - mx ) * products[unit_cost_cad], 0 )
+)
+
+Safety Stock Value = SUMX ( products, [Safety Stock] * products[unit_cost_cad] )
+
+Annual Spend Total = SUM ( products[Annual Spend] )
+
+A-Class Share of Spend = DIVIDE ( CALCULATE ( [Annual Spend Total], products[ABC] = "A" ), CALCULATE ( [Annual Spend Total], ALL ( products[ABC] ) ) )
+
+// Current habit: order 4 weeks of demand each time. Compare ordering + holding cost with EOQ.
+EOQ Annual Saving =
+SUMX (
+    products,
+    VAR D = products[Annual Units]
+    VAR H = products[unit_cost_cad] * 0.22
+    VAR Qnow = products[Avg Weekly Demand] * 4
+    VAR Qeoq = products[EOQ]
+    VAR costNow = DIVIDE ( D, Qnow ) * 85 + Qnow / 2 * H
+    VAR costEoq = DIVIDE ( D, Qeoq ) * 85 + Qeoq / 2 * H
+    RETURN costNow - costEoq
+)
+
+Weeks of Cover = DIVIDE ( SUM ( products[On Hand] ), SUM ( products[Avg Weekly Demand] ) )
+
+
+// ---------------------------------------------------------------------
+// 6. MEASURES - supplier scorecard and risk score
+// ---------------------------------------------------------------------
+
+PO Count = COUNTROWS ( purchase_orders )
+
+PO Spend = SUM ( purchase_orders[po_value_cad] )
+
+Share of Spend = DIVIDE ( [PO Spend], CALCULATE ( [PO Spend], ALL ( suppliers ) ) )
+
+On-Time Delivery % = AVERAGE ( purchase_orders[On Time] )
+
+Avg Days Late = AVERAGE ( purchase_orders[Days Late] )
+
+Avg Lead Time Wks = AVERAGE ( purchase_orders[Lead Time Wks] )
+
+Lead Time CV = DIVIDE ( STDEV.S ( purchase_orders[Lead Time Wks] ), [Avg Lead Time Wks] )
+
+Fill Rate = DIVIDE ( SUM ( purchase_orders[qty_received] ), SUM ( purchase_orders[qty_ordered] ) )
+
+Defect Rate = DIVIDE ( SUM ( purchase_orders[qty_defective] ), SUM ( purchase_orders[qty_received] ) )
+
+// Weighted 0-100 risk score. Each factor is scaled 0-1 against a "clearly bad" level.
+Risk Score =
+VAR fLate    = MIN ( 1, MAX ( 0, ( 1 - [On-Time Delivery %] ) / 0.35 ) )
+VAR fLTV     = MIN ( 1, MAX ( 0, [Lead Time CV] / 0.30 ) )
+VAR fQuality = MIN ( 1, MAX ( 0, [Defect Rate] / 0.025 ) )
+VAR fCountry = ( AVERAGE ( suppliers[Country Risk] ) - 1 ) / 4
+VAR fSpend   = MIN ( 1, MAX ( 0, [Share of Spend] / 0.30 ) )
+RETURN
+    IF ( HASONEVALUE ( suppliers[supplier_id] ),
+        100 * ( 0.30 * fLate + 0.20 * fLTV + 0.20 * fQuality + 0.15 * fCountry + 0.15 * fSpend ) )
+
+Risk Tier =
+VAR s = [Risk Score]
+RETURN IF ( ISBLANK ( s ), BLANK (), IF ( s > 60, "High", IF ( s > 35, "Medium", "Low" ) ) )
+
+Main Risk Driver =
+VAR c1 = 0.30 * MIN ( 1, MAX ( 0, ( 1 - [On-Time Delivery %] ) / 0.35 ) )
+VAR c2 = 0.20 * MIN ( 1, MAX ( 0, [Lead Time CV] / 0.30 ) )
+VAR c3 = 0.20 * MIN ( 1, MAX ( 0, [Defect Rate] / 0.025 ) )
+VAR c4 = 0.15 * ( AVERAGE ( suppliers[Country Risk] ) - 1 ) / 4
+VAR c5 = 0.15 * MIN ( 1, MAX ( 0, [Share of Spend] / 0.30 ) )
+VAR biggest = MAX ( MAX ( MAX ( c1, c2 ), MAX ( c3, c4 ) ), c5 )
+RETURN
+    IF ( HASONEVALUE ( suppliers[supplier_id] ),
+        SWITCH ( TRUE (),
+            biggest = c1, "Late delivery",
+            biggest = c2, "Lead-time variability",
+            biggest = c3, "Quality",
+            biggest = c4, "Country risk",
+            "Spend dependency" ) )
+
+High-Risk Suppliers = COUNTROWS ( FILTER ( VALUES ( suppliers[supplier_id] ), [Risk Score] > 60 ) )
+
+// Use with conditional formatting > Font color > Field value
+Risk Color = SWITCH ( [Risk Tier], "High", "#D03B3B", "Medium", "#FAB219", "Low", "#0CA30C" )
+
+Status Color =
+SWITCH ( [Inventory Status],
+    "Critical - expedite", "#D03B3B", "Order now", "#EC835A", "Overstock", "#FAB219", "Healthy", "#0CA30C" )
+
+
+// ---------------------------------------------------------------------
+// 7. MEASURES - disruption simulator
+//    Use with a supplier slicer + the Delay Weeks slider.
+// ---------------------------------------------------------------------
+
+Weeks of Stock = DIVIDE ( SUM ( products[Inventory Position] ), SUM ( products[Avg Weekly Demand] ) )
+
+New Lead Time Wks = IF ( NOT ISEMPTY ( products ), AVERAGE ( products[LT Mean Wks] ) + [Delay Weeks Value] )
+
+Units Short =
+SUMX (
+    products,
+    VAR wks = DIVIDE ( products[Inventory Position], products[Avg Weekly Demand] )
+    VAR gap = MAX ( 0, products[LT Mean Wks] + [Delay Weeks Value] - wks )
+    RETURN ROUNDUP ( gap * products[Avg Weekly Demand], 0 )
+)
+
+Revenue at Risk = SUMX ( products, [Units Short] * products[unit_cost_cad] * 1.35 )
+
+SKUs Stocking Out = COUNTROWS ( FILTER ( VALUES ( products[sku] ), [Units Short] > 0 ) )
+
+Extra Buffer Cost = SUMX ( products, ROUNDUP ( products[Avg Weekly Demand] * [Delay Weeks Value], 0 ) * products[unit_cost_cad] )
+
+Disruption Outcome = IF ( HASONEVALUE ( products[sku] ), IF ( [Units Short] > 0, "Stockout", "Covered" ) )
+
+
+// ---------------------------------------------------------------------
+// 8. LOGISTICS & LANDED COST
+//    Tables landed_cost_by_sku and landed_cost_by_country are loaded from
+//    /data (calculated by src/landed_cost.py).
+//    Relationship: landed_cost_by_sku[sku] -> products[sku]
+// ---------------------------------------------------------------------
+
+Offshore SKUs Reviewed = COUNTROWS ( landed_cost_by_sku ) + 0
+
+Nearshore Cheaper SKUs = COUNTROWS ( FILTER ( landed_cost_by_sku, landed_cost_by_sku[annual_saving_cad] > 0 ) ) + 0
+
+Nearshore Candidates = COUNTROWS ( FILTER ( landed_cost_by_sku, landed_cost_by_sku[recommendation] <> "Keep offshore" ) ) + 0
+
+Nearshore Saving = SUMX ( FILTER ( landed_cost_by_sku, landed_cost_by_sku[annual_saving_cad] > 0 ), landed_cost_by_sku[annual_saving_cad] ) + 0
+
+Landed Saving = SUM ( landed_cost_by_sku[annual_saving_cad] )
+
+Inventory Released = CALCULATE ( SUM ( landed_cost_by_sku[inventory_released_cad] ), landed_cost_by_sku[recommendation] <> "Keep offshore" ) + 0
+
+Lead Time Cut Wks =
+AVERAGEX (
+    FILTER ( landed_cost_by_sku, landed_cost_by_sku[recommendation] <> "Keep offshore" ),
+    landed_cost_by_sku[current_lead_time_wks] - landed_cost_by_sku[nearshore_lead_time_wks] )
+
+Price = SUM ( landed_cost_by_country[price] )
+Freight = SUM ( landed_cost_by_country[freight] )
+Duty = SUM ( landed_cost_by_country[duty] )
+Brokerage = SUM ( landed_cost_by_country[brokerage] )
+Landed Total = SUM ( landed_cost_by_country[landed_total] )
+
+Recommendation Color =
+SWITCH ( SELECTEDVALUE ( landed_cost_by_sku[recommendation] ),
+    "Nearshore: lower total cost", "#0CA30C",
+    "Nearshore candidate: small premium for resilience", "#C98500",
+    "#7A7974" )

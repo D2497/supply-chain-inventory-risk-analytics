@@ -1,0 +1,283 @@
+table _Measures
+	lineageTag: 2e862414-21ea-5217-a508-867611d53dee
+
+	measure 'z Score' = NORM.S.INV ( [Service Level Value] )
+		formatString: 0.000
+		lineageTag: 913cade1-ff07-5d11-82c7-22b570fe91c8
+
+	measure 'Safety Stock' =
+			VAR z = [z Score]
+			RETURN
+			    SUMX ( products,
+			        ROUNDUP ( z * SQRT ( products[LT Mean Wks] * products[Demand Std] ^ 2
+			                           + products[Avg Weekly Demand] ^ 2 * products[LT Std Wks] ^ 2 ), 0 ) )
+		formatString: #,0
+		lineageTag: edd4e9a4-5bd3-53e8-b4e9-52843584ba3c
+
+	measure 'Reorder Point' = SUMX ( products, ROUNDUP ( products[Avg Weekly Demand] * products[LT Mean Wks] + [Safety Stock], 0 ) )
+		formatString: #,0
+		lineageTag: d23ff113-6b89-5409-923b-97d57a60c3fe
+
+	measure 'Inventory Status' =
+			IF ( HASONEVALUE ( products[sku] ),
+			    VAR pos = SELECTEDVALUE ( products[Inventory Position] )
+			    VAR ss  = [Safety Stock]
+			    VAR rop = [Reorder Point]
+			    VAR mx  = rop + SELECTEDVALUE ( products[EOQ] )
+			    RETURN
+			        SWITCH ( TRUE (),
+			            pos < ss,   "Critical - expedite",
+			            pos <= rop, "Order now",
+			            pos > mx,   "Overstock",
+			            "Healthy" ) )
+		lineageTag: 3e5e9228-59ea-5497-b0b0-f397b8d7fe05
+
+	measure 'Suggested Order Qty' =
+			SUMX ( products,
+			    VAR st = [Inventory Status]
+			    VAR gap = [Reorder Point] + products[EOQ] - products[Inventory Position]
+			    RETURN IF ( st IN { "Critical - expedite", "Order now" }, MAX ( products[EOQ], gap ), 0 ) )
+		formatString: #,0
+		lineageTag: 5045327b-9b49-5497-8816-0f606c58d068
+
+	measure 'SKUs in Status' = COUNTROWS ( FILTER ( VALUES ( products[sku] ), [Inventory Status] = SELECTEDVALUE ( 'Status List'[Status] ) ) ) + 0
+		formatString: 0
+		lineageTag: 66a05338-3351-5f30-a2c2-1badc7d37253
+
+	measure 'SKUs to Order' = COUNTROWS ( FILTER ( VALUES ( products[sku] ), [Inventory Status] IN { "Critical - expedite", "Order now" } ) ) + 0
+		formatString: 0
+		lineageTag: 1c23049f-a1d7-504f-8408-79f7a122e96f
+
+	measure 'SKUs Critical' = COUNTROWS ( FILTER ( VALUES ( products[sku] ), [Inventory Status] = "Critical - expedite" ) ) + 0
+		formatString: 0
+		lineageTag: 86bafef5-dc4d-50db-bd86-d376cabb4c39
+
+	measure 'SKUs Overstocked' = COUNTROWS ( FILTER ( VALUES ( products[sku] ), [Inventory Status] = "Overstock" ) ) + 0
+		formatString: 0
+		lineageTag: 03ed7ed2-3a28-566d-8720-6d1649479f55
+
+	measure 'Excess Inventory Value' =
+			SUMX ( products,
+			    VAR mx = [Reorder Point] + products[EOQ]
+			    RETURN IF ( products[Inventory Position] > mx, ( products[Inventory Position] - mx ) * products[unit_cost_cad], 0 ) )
+		formatString: $#,0
+		lineageTag: 2cd974e7-c8bd-55af-9901-ab499bcdd90b
+
+	measure 'Safety Stock Value' = SUMX ( products, [Safety Stock] * products[unit_cost_cad] )
+		formatString: $#,0
+		lineageTag: cb113af0-876b-5c91-a8bc-88b61b0d2b6c
+
+	measure 'Annual Spend Total' = SUM ( products[Annual Spend] )
+		formatString: $#,0
+		lineageTag: 1fc54dd8-dabd-586c-b31b-60ad2cb04d43
+
+	measure 'A-Class Share of Spend' = DIVIDE ( CALCULATE ( [Annual Spend Total], products[ABC] = "A" ), CALCULATE ( [Annual Spend Total], ALL ( products[ABC] ) ) )
+		formatString: 0.0%
+		lineageTag: 19be44f6-1add-5a4b-9ddd-fd1e25be5575
+
+	measure 'EOQ Annual Saving' =
+			SUMX ( products,
+			    VAR D = products[Annual Units]
+			    VAR H = products[unit_cost_cad] * 0.22
+			    VAR Qnow = products[Avg Weekly Demand] * 4
+			    VAR Qeoq = products[EOQ]
+			    VAR costNow = DIVIDE ( D, Qnow ) * 85 + Qnow / 2 * H
+			    VAR costEoq = DIVIDE ( D, Qeoq ) * 85 + Qeoq / 2 * H
+			    RETURN costNow - costEoq )
+		formatString: $#,0
+		lineageTag: 6de473de-6cc6-51e0-bc55-a2a0376acd39
+
+	measure 'SKU Count' = COUNTROWS ( products )
+		formatString: 0
+		lineageTag: 22710dce-23e7-5410-a420-cd0e9eee8fae
+
+	measure 'PO Count' = COUNTROWS ( purchase_orders )
+		formatString: #,0
+		lineageTag: dc54eb3f-de25-5496-bf2e-7fcff5799386
+
+	measure 'PO Spend' = SUM ( purchase_orders[po_value_cad] )
+		formatString: $#,0
+		lineageTag: b4fb20c0-7bbf-5a64-ae7a-d7328e784f75
+
+	measure 'Share of Spend' = DIVIDE ( [PO Spend], CALCULATE ( [PO Spend], ALL ( suppliers ) ) )
+		formatString: 0.0%
+		lineageTag: e74e6829-b125-56bf-9c9e-514bef2f2e84
+
+	measure 'On-Time Delivery %' = AVERAGE ( purchase_orders[On Time] )
+		formatString: 0.0%
+		lineageTag: cc95d063-e264-53ec-bbba-1650c513eed6
+
+	measure 'Avg Days Late' = AVERAGE ( purchase_orders[Days Late] )
+		formatString: 0.0
+		lineageTag: d5a63d22-5c04-5bd3-9fa3-5373a8a373a8
+
+	measure 'Avg Lead Time Wks' = AVERAGE ( purchase_orders[Lead Time Wks] )
+		formatString: 0.0
+		lineageTag: 33f8c30f-2791-5c40-aa1b-c32694ca3378
+
+	measure 'Lead Time CV' = DIVIDE ( STDEV.S ( purchase_orders[Lead Time Wks] ), [Avg Lead Time Wks] )
+		formatString: 0.0%
+		lineageTag: 2a2a9fd9-3452-53d0-80ba-1b7c6610adf6
+
+	measure 'Fill Rate' = DIVIDE ( SUM ( purchase_orders[qty_received] ), SUM ( purchase_orders[qty_ordered] ) )
+		formatString: 0.0%
+		lineageTag: cec1ad5d-57d6-50f0-99cc-ef1e6f35a1f5
+
+	measure 'Defect Rate' = DIVIDE ( SUM ( purchase_orders[qty_defective] ), SUM ( purchase_orders[qty_received] ) )
+		formatString: 0.00%
+		lineageTag: d9c13c19-0dd4-54bd-98ee-4a0772806dbf
+
+	measure 'Risk Score' =
+			VAR fLate    = MIN ( 1, MAX ( 0, ( 1 - [On-Time Delivery %] ) / 0.35 ) )
+			VAR fLTV     = MIN ( 1, MAX ( 0, [Lead Time CV] / 0.30 ) )
+			VAR fQuality = MIN ( 1, MAX ( 0, [Defect Rate] / 0.025 ) )
+			VAR fCountry = ( AVERAGE ( suppliers[Country Risk] ) - 1 ) / 4
+			VAR fSpend   = MIN ( 1, MAX ( 0, [Share of Spend] / 0.30 ) )
+			RETURN
+			    IF ( HASONEVALUE ( suppliers[supplier_id] ) && [PO Count] > 0,
+			        100 * ( 0.30 * fLate + 0.20 * fLTV + 0.20 * fQuality + 0.15 * fCountry + 0.15 * fSpend ) )
+		formatString: 0
+		lineageTag: 7c37f625-8de6-5016-b27b-020cd1dfd745
+
+	measure 'Risk Tier' =
+			VAR s = [Risk Score]
+			RETURN IF ( ISBLANK ( s ), BLANK (), IF ( s > 60, "High", IF ( s > 35, "Medium", "Low" ) ) )
+		lineageTag: d488c3f0-d271-58ef-9613-f5a2f289396d
+
+	measure 'Main Risk Driver' =
+			VAR c1 = 0.30 * MIN ( 1, MAX ( 0, ( 1 - [On-Time Delivery %] ) / 0.35 ) )
+			VAR c2 = 0.20 * MIN ( 1, MAX ( 0, [Lead Time CV] / 0.30 ) )
+			VAR c3 = 0.20 * MIN ( 1, MAX ( 0, [Defect Rate] / 0.025 ) )
+			VAR c4 = 0.15 * ( AVERAGE ( suppliers[Country Risk] ) - 1 ) / 4
+			VAR c5 = 0.15 * MIN ( 1, MAX ( 0, [Share of Spend] / 0.30 ) )
+			VAR biggest = MAX ( MAX ( MAX ( c1, c2 ), MAX ( c3, c4 ) ), c5 )
+			RETURN
+			    IF ( HASONEVALUE ( suppliers[supplier_id] ) && [PO Count] > 0,
+			        SWITCH ( TRUE (),
+			            biggest = c1, "Late delivery",
+			            biggest = c2, "Lead-time variability",
+			            biggest = c3, "Quality",
+			            biggest = c4, "Country risk",
+			            "Spend dependency" ) )
+		lineageTag: 9ec15a40-0226-52bb-93cb-0b2970df3405
+
+	measure 'High-Risk Suppliers' = COUNTROWS ( FILTER ( VALUES ( suppliers[supplier_id] ), [Risk Score] > 60 ) ) + 0
+		formatString: 0
+		lineageTag: 6c20b13a-a8ec-5e24-b732-2a013711f582
+
+	measure 'Risk Color' = SWITCH ( [Risk Tier], "High", "#D03B3B", "Medium", "#FAB219", "Low", "#0CA30C" )
+		lineageTag: ff6e51f6-7167-5880-b699-3e1fc37ae830
+
+	measure 'Status Color' =
+			SWITCH ( [Inventory Status],
+			    "Critical - expedite", "#D03B3B", "Order now", "#EC835A", "Overstock", "#FAB219", "Healthy", "#0CA30C" )
+		lineageTag: 684eef8f-612d-5d98-87be-f44da2f17844
+
+	measure 'Status Bar Color' =
+			SWITCH ( SELECTEDVALUE ( 'Status List'[Status] ),
+			    "Critical - expedite", "#D03B3B", "Order now", "#EC835A", "Overstock", "#FAB219", "Healthy", "#0CA30C" )
+		lineageTag: baeb93d8-6542-5647-b192-9d886430a15a
+
+	measure 'Units Sold' = SUM ( weekly_demand[units] )
+		formatString: #,0
+		lineageTag: 3a753717-4e3c-5c02-8c54-6e9498837f4a
+
+	measure 'Weeks of Stock' = DIVIDE ( SUM ( products[Inventory Position] ), SUM ( products[Avg Weekly Demand] ) )
+		formatString: 0.0
+		lineageTag: c9aa7f7c-3055-5521-9dd9-533be2e12e1d
+
+	measure 'New Lead Time Wks' = IF ( NOT ISEMPTY ( products ), AVERAGE ( products[LT Mean Wks] ) + [Delay Weeks Value] )
+		formatString: 0.0
+		lineageTag: d8eca8f9-df4a-5250-8026-83bdb203b850
+
+	measure 'Units Short' =
+			SUMX ( products,
+			    VAR wks = DIVIDE ( products[Inventory Position], products[Avg Weekly Demand] )
+			    VAR gap = MAX ( 0, products[LT Mean Wks] + [Delay Weeks Value] - wks )
+			    RETURN ROUNDUP ( gap * products[Avg Weekly Demand], 0 ) )
+		formatString: #,0
+		lineageTag: 9c7ab7ae-378a-5040-b306-2dcefce8be3d
+
+	measure 'Revenue at Risk' = SUMX ( products, [Units Short] * products[unit_cost_cad] * 1.35 )
+		formatString: $#,0
+		lineageTag: 530921b7-80e3-58f2-8fe5-06d11b1fbd48
+
+	measure 'SKUs Stocking Out' = COUNTROWS ( FILTER ( VALUES ( products[sku] ), [Units Short] > 0 ) ) + 0
+		formatString: 0
+		lineageTag: a5c1760e-a612-5523-b96a-f178f1f220a7
+
+	measure 'Extra Buffer Cost' = SUMX ( products, ROUNDUP ( products[Avg Weekly Demand] * [Delay Weeks Value], 0 ) * products[unit_cost_cad] )
+		formatString: $#,0
+		lineageTag: 7f7c64be-35cf-5a88-8cba-0c255d7e8719
+
+	measure 'Disruption Outcome' = IF ( HASONEVALUE ( products[sku] ), IF ( [Units Short] > 0, "Stockout", "Covered" ) )
+		lineageTag: 6d6a0d2b-d226-5247-ab3c-5b98668b6fdc
+
+	measure 'Outcome Color' = IF ( [Units Short] > 0, "#D03B3B", "#0CA30C" )
+		lineageTag: 73a0649f-c550-5ba6-919b-9261de2839df
+
+	measure 'Offshore SKUs Reviewed' = COUNTROWS ( landed_cost_by_sku ) + 0
+		formatString: 0
+		lineageTag: 156288b1-3a1a-5d67-afd6-ced5fccc11bc
+
+	measure 'Nearshore Cheaper SKUs' = COUNTROWS ( FILTER ( landed_cost_by_sku, landed_cost_by_sku[annual_saving_cad] > 0 ) ) + 0
+		formatString: 0
+		lineageTag: 09f2029e-3a01-5214-a6df-c6f7ea28a873
+
+	measure 'Nearshore Candidates' = COUNTROWS ( FILTER ( landed_cost_by_sku, landed_cost_by_sku[recommendation] <> "Keep offshore" ) ) + 0
+		formatString: 0
+		lineageTag: 21e0d99a-4f30-58f4-890b-accd608e5bf5
+
+	measure 'Nearshore Saving' = SUMX ( FILTER ( landed_cost_by_sku, landed_cost_by_sku[annual_saving_cad] > 0 ), landed_cost_by_sku[annual_saving_cad] ) + 0
+		formatString: $#,0
+		lineageTag: 781f9621-a772-52dd-8ff2-f27e9df8498b
+
+	measure 'Landed Saving' = SUM ( landed_cost_by_sku[annual_saving_cad] )
+		formatString: $#,0
+		lineageTag: bf15a826-4328-5c9f-b566-7fb69d86f9f6
+
+	measure 'Inventory Released' = CALCULATE ( SUM ( landed_cost_by_sku[inventory_released_cad] ), landed_cost_by_sku[recommendation] <> "Keep offshore" ) + 0
+		formatString: $#,0
+		lineageTag: 8c16f136-0362-5f01-b79d-fc1a1eef7c42
+
+	measure 'Lead Time Cut Wks' = AVERAGEX ( FILTER ( landed_cost_by_sku, landed_cost_by_sku[recommendation] <> "Keep offshore" ), landed_cost_by_sku[current_lead_time_wks] - landed_cost_by_sku[nearshore_lead_time_wks] )
+		formatString: 0.0
+		lineageTag: 03cf0e64-6cec-575c-9229-61c24eb42140
+
+	measure Price = SUM ( landed_cost_by_country[price] )
+		formatString: 0.0
+		lineageTag: 9c9fac7d-c05c-5081-8a01-f9b80474ea02
+
+	measure Freight = SUM ( landed_cost_by_country[freight] )
+		formatString: 0.0
+		lineageTag: b833216b-fd13-539c-ba78-a538247e6465
+
+	measure Duty = SUM ( landed_cost_by_country[duty] )
+		formatString: 0.0
+		lineageTag: b9f8c5da-5ee3-57b3-b06a-fb728cc0aaf4
+
+	measure Brokerage = SUM ( landed_cost_by_country[brokerage] )
+		formatString: 0.0
+		lineageTag: 319bf7fa-6653-501e-bf9e-fd1d26c9bba9
+
+	measure 'Landed Total' = SUM ( landed_cost_by_country[landed_total] )
+		formatString: 0.0
+		lineageTag: 74752021-e9e4-548d-a234-34fd2aefccce
+
+	measure 'Recommendation Color' = SWITCH ( SELECTEDVALUE ( landed_cost_by_sku[recommendation] ), "Nearshore: lower total cost", "#0CA30C", "Nearshore candidate: small premium for resilience", "#C98500", "#7A7974" )
+		lineageTag: 08662e0a-b29e-586a-a47d-5ab2b57658e0
+
+	column Value
+		dataType: string
+		isHidden
+		lineageTag: 92112905-b5b9-5261-9352-efe9f40932ed
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = calculated
+		mode: import
+		source = { "" }
+

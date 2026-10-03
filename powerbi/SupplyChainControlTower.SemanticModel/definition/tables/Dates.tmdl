@@ -1,0 +1,55 @@
+table Dates
+	lineageTag: 5cd1f15f-90ab-5c87-a70a-161916ef5fd8
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 8111d753-7e02-543e-8af0-09af290f72de
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 65a97eab-85e1-5f63-8490-14fb384bb2cc
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: 3d33070f-8c7a-5bc0-878e-9cd37b15b0e7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month]
+		sortByColumn: 'Month Sort'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f3fbc6c6-b4c2-5bd0-9347-07131ce847f2
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month Sort]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dates = calculated
+		mode: import
+		source =
+				ADDCOLUMNS (
+				    CALENDAR ( MIN ( weekly_demand[week_start] ), MAX ( weekly_demand[week_start] ) + 90 ),
+				    "Year", YEAR ( [Date] ),
+				    "Month", FORMAT ( [Date], "mmm yyyy" ),
+				    "Month Sort", YEAR ( [Date] ) * 100 + MONTH ( [Date] ) )
+

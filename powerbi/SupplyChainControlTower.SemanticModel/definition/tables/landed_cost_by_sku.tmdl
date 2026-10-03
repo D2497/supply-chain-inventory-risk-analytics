@@ -1,0 +1,169 @@
+table landed_cost_by_sku
+	lineageTag: fa421f26-e988-5fbe-ad01-3397668fdb2c
+
+	column sku
+		dataType: string
+		lineageTag: e5dfd2f9-1997-52b5-8458-109c223c2929
+		summarizeBy: none
+		sourceColumn: sku
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_name
+		dataType: string
+		lineageTag: bb536343-47fb-593c-83b2-f6b3f2cbe7e1
+		summarizeBy: none
+		sourceColumn: product_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column abc_class
+		dataType: string
+		lineageTag: a0be52c0-410a-5814-bd9c-0ffb96297a9f
+		summarizeBy: none
+		sourceColumn: abc_class
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_supplier
+		dataType: string
+		lineageTag: 6265da24-4390-5d5e-aff2-ed75d025d778
+		summarizeBy: none
+		sourceColumn: current_supplier
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_country
+		dataType: string
+		lineageTag: ddb6a431-b3d9-5122-a174-a083666b495d
+		summarizeBy: none
+		sourceColumn: current_country
+
+		annotation SummarizationSetBy = Automatic
+
+	column nearshore_supplier
+		dataType: string
+		lineageTag: 58c87b72-75d9-54f4-800d-3746d14b8aba
+		summarizeBy: none
+		sourceColumn: nearshore_supplier
+
+		annotation SummarizationSetBy = Automatic
+
+	column nearshore_country
+		dataType: string
+		lineageTag: 4f846efc-901d-5525-bbc0-1f29ac059933
+		summarizeBy: none
+		sourceColumn: nearshore_country
+
+		annotation SummarizationSetBy = Automatic
+
+	column annual_units
+		dataType: double
+		formatString: #,0
+		lineageTag: aa200447-e3d0-59f6-8402-f7129bebeef2
+		summarizeBy: sum
+		sourceColumn: annual_units
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_landed_unit_cad
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: 0a382b9e-211c-5a51-a379-d58cb092cefb
+		summarizeBy: sum
+		sourceColumn: current_landed_unit_cad
+
+		annotation SummarizationSetBy = Automatic
+
+	column nearshore_landed_unit_cad
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: 20e7c088-5435-59e2-9938-4cad39b32da0
+		summarizeBy: sum
+		sourceColumn: nearshore_landed_unit_cad
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_lead_time_wks
+		dataType: double
+		formatString: 0.0
+		lineageTag: 4bad84bb-e687-51b4-a4ba-eeca6d8e16a3
+		summarizeBy: sum
+		sourceColumn: current_lead_time_wks
+
+		annotation SummarizationSetBy = Automatic
+
+	column nearshore_lead_time_wks
+		dataType: double
+		formatString: 0.0
+		lineageTag: 5634c1ae-4597-5dd5-b3b8-a58b08d666c8
+		summarizeBy: sum
+		sourceColumn: nearshore_lead_time_wks
+
+		annotation SummarizationSetBy = Automatic
+
+	column current_total_cad
+		dataType: double
+		formatString: $#,0
+		lineageTag: 417ab217-d64d-53f4-8139-cff4d821ba84
+		summarizeBy: sum
+		sourceColumn: current_total_cad
+
+		annotation SummarizationSetBy = Automatic
+
+	column nearshore_total_cad
+		dataType: double
+		formatString: $#,0
+		lineageTag: df74ecdc-6b11-5d0b-8e04-e55e9099e586
+		summarizeBy: sum
+		sourceColumn: nearshore_total_cad
+
+		annotation SummarizationSetBy = Automatic
+
+	column annual_saving_cad
+		dataType: double
+		formatString: $#,0
+		lineageTag: 8062d6b0-86b9-5239-8257-a62293bd706a
+		summarizeBy: sum
+		sourceColumn: annual_saving_cad
+
+		annotation SummarizationSetBy = Automatic
+
+	column saving_pct
+		dataType: double
+		formatString: 0.0%
+		lineageTag: f05071d7-ef00-5f78-a1e5-879dbb36ee7a
+		summarizeBy: sum
+		sourceColumn: saving_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column inventory_released_cad
+		dataType: double
+		formatString: $#,0
+		lineageTag: df0e8fbc-dafe-533f-b165-1e158d8105b7
+		summarizeBy: sum
+		sourceColumn: inventory_released_cad
+
+		annotation SummarizationSetBy = Automatic
+
+	column recommendation
+		dataType: string
+		lineageTag: 39a56485-0942-5ab4-83ce-d2b1812753d9
+		summarizeBy: none
+		sourceColumn: recommendation
+
+		annotation SummarizationSetBy = Automatic
+
+	partition landed_cost_by_sku = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "landed_cost_by_sku.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Headers, {{"sku", type text}, {"product_name", type text}, {"abc_class", type text}, {"current_supplier", type text}, {"current_country", type text}, {"nearshore_supplier", type text}, {"nearshore_country", type text}, {"annual_units", type number}, {"current_landed_unit_cad", type number}, {"nearshore_landed_unit_cad", type number}, {"current_lead_time_wks", type number}, {"nearshore_lead_time_wks", type number}, {"current_total_cad", type number}, {"nearshore_total_cad", type number}, {"annual_saving_cad", type number}, {"saving_pct", type number}, {"inventory_released_cad", type number}, {"recommendation", type text}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,43 @@
+table weekly_demand
+	lineageTag: ae60dfa4-4fd1-5e88-9699-b8c902f51500
+
+	column week_start
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: fb9369c6-d440-5b78-9942-5ff6ed4fa862
+		summarizeBy: none
+		sourceColumn: week_start
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column sku
+		dataType: string
+		lineageTag: e0f2acb3-3482-525b-89e3-a26e4d3eb439
+		summarizeBy: none
+		sourceColumn: sku
+
+		annotation SummarizationSetBy = Automatic
+
+	column units
+		dataType: int64
+		formatString: #,0
+		lineageTag: 75473232-cb32-5dbf-ad98-e6ef24a8940c
+		summarizeBy: sum
+		sourceColumn: units
+
+		annotation SummarizationSetBy = Automatic
+
+	partition weekly_demand = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "weekly_demand.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Headers, {{"week_start", type date}, {"sku", type text}, {"units", Int64.Type}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,7 @@
+expression DataFolder = "C:\Users\Dhruv\Documents\supply-chain-inventory-risk-analytics\data\" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 9aacbd48-2ad6-5dc5-a739-9284f7e8608f
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+

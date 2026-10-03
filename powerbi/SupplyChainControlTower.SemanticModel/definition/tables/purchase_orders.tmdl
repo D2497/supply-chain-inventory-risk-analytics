@@ -1,0 +1,132 @@
+table purchase_orders
+	lineageTag: d79694a4-7241-5894-8dad-32c2321e44d7
+
+	column po_id
+		dataType: string
+		lineageTag: bda0db80-f84d-5da2-8d59-79c3905a30be
+		summarizeBy: none
+		sourceColumn: po_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column supplier_id
+		dataType: string
+		lineageTag: 3251e23d-c1df-566e-9944-eb4e3f5dd705
+		summarizeBy: none
+		sourceColumn: supplier_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column sku
+		dataType: string
+		lineageTag: 788679ee-6e28-5260-902b-ac71fd8501b5
+		summarizeBy: none
+		sourceColumn: sku
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 52ed5b4f-de99-5ba1-9fb9-cbd4bfe7d3a8
+		summarizeBy: none
+		sourceColumn: order_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column promised_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 95314ba4-c82c-5579-8fbc-43cca78c5ba4
+		summarizeBy: none
+		sourceColumn: promised_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column received_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: cc8faea9-1f3d-54d5-9c8b-37c81ef818ec
+		summarizeBy: none
+		sourceColumn: received_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column qty_ordered
+		dataType: int64
+		formatString: #,0
+		lineageTag: 2cfe7520-31df-51b6-85e7-370870cd6fab
+		summarizeBy: sum
+		sourceColumn: qty_ordered
+
+		annotation SummarizationSetBy = Automatic
+
+	column qty_received
+		dataType: int64
+		formatString: #,0
+		lineageTag: ccce032c-1b8f-575b-9599-3b128181912f
+		summarizeBy: sum
+		sourceColumn: qty_received
+
+		annotation SummarizationSetBy = Automatic
+
+	column qty_defective
+		dataType: int64
+		formatString: #,0
+		lineageTag: a07c1628-e040-5e57-bd52-7c83954976f4
+		summarizeBy: sum
+		sourceColumn: qty_defective
+
+		annotation SummarizationSetBy = Automatic
+
+	column po_value_cad
+		dataType: double
+		formatString: $#,0
+		lineageTag: 80651d34-cea0-5977-b1b6-57abf090d52b
+		summarizeBy: sum
+		sourceColumn: po_value_cad
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Lead Time Wks' = DATEDIFF ( purchase_orders[order_date], purchase_orders[received_date], DAY ) / 7
+		dataType: double
+		formatString: 0.0
+		lineageTag: aba13852-185f-5fc3-a03f-43f546209d51
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'On Time' = IF ( purchase_orders[received_date] <= purchase_orders[promised_date], 1, 0 )
+		dataType: int64
+		formatString: 0
+		lineageTag: 06ad8d88-ea26-52e3-adf9-8f3797f8c845
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days Late' = MAX ( 0, INT ( purchase_orders[received_date] - purchase_orders[promised_date] ) )
+		dataType: int64
+		formatString: 0
+		lineageTag: 8f7d9926-f3b3-5cd4-a270-1b4cfaaf45dd
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition purchase_orders = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "purchase_orders.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Headers, {{"po_id", type text}, {"supplier_id", type text}, {"sku", type text}, {"order_date", type date}, {"promised_date", type date}, {"received_date", type date}, {"qty_ordered", Int64.Type}, {"qty_received", Int64.Type}, {"qty_defective", Int64.Type}, {"po_value_cad", type number}}, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

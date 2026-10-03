@@ -1,0 +1,292 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "fa950fb5ee7fe5831a12",
+  "position": {
+    "x": 464,
+    "y": 274,
+    "z": 54000,
+    "height": 426,
+    "width": 796,
+    "tabOrder": 54000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "landed_cost_by_sku"
+                    }
+                  },
+                  "Property": "sku"
+                }
+              },
+              "queryRef": "landed_cost_by_sku.sku",
+              "nativeQueryRef": "SKU",
+              "displayName": "SKU"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "landed_cost_by_sku"
+                    }
+                  },
+                  "Property": "product_name"
+                }
+              },
+              "queryRef": "landed_cost_by_sku.product_name",
+              "nativeQueryRef": "Product",
+              "displayName": "Product"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "landed_cost_by_sku"
+                    }
+                  },
+                  "Property": "current_country"
+                }
+              },
+              "queryRef": "landed_cost_by_sku.current_country",
+              "nativeQueryRef": "Now",
+              "displayName": "Now"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "landed_cost_by_sku"
+                    }
+                  },
+                  "Property": "nearshore_country"
+                }
+              },
+              "queryRef": "landed_cost_by_sku.nearshore_country",
+              "nativeQueryRef": "Nearshore",
+              "displayName": "Nearshore"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "landed_cost_by_sku"
+                    }
+                  },
+                  "Property": "current_lead_time_wks"
+                }
+              },
+              "queryRef": "landed_cost_by_sku.current_lead_time_wks",
+              "nativeQueryRef": "LT now",
+              "displayName": "LT now"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "landed_cost_by_sku"
+                    }
+                  },
+                  "Property": "nearshore_lead_time_wks"
+                }
+              },
+              "queryRef": "landed_cost_by_sku.nearshore_lead_time_wks",
+              "nativeQueryRef": "LT near",
+              "displayName": "LT near"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Landed Saving"
+                }
+              },
+              "queryRef": "_Measures.Landed Saving",
+              "nativeQueryRef": "Saving/yr",
+              "displayName": "Saving/yr"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "landed_cost_by_sku"
+                    }
+                  },
+                  "Property": "inventory_released_cad"
+                }
+              },
+              "queryRef": "landed_cost_by_sku.inventory_released_cad",
+              "nativeQueryRef": "Inv. freed",
+              "displayName": "Inv. freed"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "landed_cost_by_sku"
+                    }
+                  },
+                  "Property": "recommendation"
+                }
+              },
+              "queryRef": "landed_cost_by_sku.recommendation",
+              "nativeQueryRef": "Recommendation",
+              "displayName": "Recommendation"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "_Measures"
+                  }
+                },
+                "Property": "Landed Saving"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "_Measures"
+                        }
+                      },
+                      "Property": "Recommendation Color"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "landed_cost_by_sku.recommendation"
+          }
+        }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Offshore SKUs: total landed cost comparison'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "dropShadow": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
