@@ -4,6 +4,8 @@
 
 [![Dashboard preview](docs/dashboard_preview.png)](https://d2497.github.io/supply-chain-inventory-risk-analytics/)
 
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Dhruvilkumar%20Upadhyay-0A66C2)](https://www.linkedin.com/in/dhruvilupadhyay24)
+
 **Tools:** Python (pandas) · SQL · Excel (formula-driven model) · Power BI (DAX, data model) · HTML dashboard
 
 An end-to-end supply chain analytics project built three ways: an automated **Python + SQL** pipeline, a live **Excel** model, and a **Power BI** report. It answers six questions a supply chain team faces every week:
@@ -218,4 +220,4 @@ These concepts come from my **Master Certificate in Global Supply Chain Manageme
 - Multi-echelon inventory (warehouse + clinics) and Monte Carlo lead-time simulation
 
 ## Author
-**Dhruvilkumar Upadhyay** · dhruvil.u24@gmail.com
+**Dhruvilkumar Upadhyay** · [LinkedIn](https://www.linkedin.com/in/dhruvilupadhyay24) · dhruvil.u24@gmail.com
